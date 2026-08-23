@@ -1,0 +1,155 @@
+name: linux
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+
+    steps:
+      - name: 1. Checkout Repository
+        uses: actions/checkout@v6
+
+      - name: 2. Restore Persistent Workspace
+        uses: actions/cache@v5
+        with:
+          path: /home/runner/workspace
+          key: runner-ssh-workspace-${{ github.run_id }}
+          restore-keys: |
+            runner-ssh-workspace-
+
+      - name: 3. Setup OpenSSH Server & Set Runner Password
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y openssh-server
+          echo "runner:${{ secrets.RUNNER_PASSWORD }}" | sudo chpasswd
+          sudo sed -i 's/^#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config
+          sudo sed -i 's/^PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
+          sudo systemctl restart ssh
+          sudo systemctl enable ssh
+
+      - name: 4. Setup npm, PATH, and Environment Variables Persistently
+        env:
+          GH_TOKEN: ${{ secrets.MY_PAT }}
+        run: |
+          mkdir -p ~/.npm-global
+          npm config set prefix '~/.npm-global'
+
+          echo 'export PATH="$HOME/.npm-global/bin:$PATH"' >> ~/.bashrc
+          echo 'export PATH="$HOME/.npm-global/bin:$PATH"' >> ~/.profile
+          export PATH="$HOME/.npm-global/bin:$PATH"
+
+          echo "export GH_TOKEN=$GH_TOKEN" >> ~/.bashrc
+          echo "export GH_TOKEN=$GH_TOKEN" >> ~/.profile
+          echo "GH_TOKEN=$GH_TOKEN" | sudo tee -a /etc/environment
+
+          echo 'export INITIAL_PASSWORD="${{ secrets.RUNNER_PASSWORD }}"' >> ~/.bashrc
+          echo 'export INITIAL_PASSWORD="${{ secrets.RUNNER_PASSWORD }}"' >> ~/.profile
+          echo 'INITIAL_PASSWORD="${{ secrets.RUNNER_PASSWORD }}"' | sudo tee -a /etc/environment
+
+      - name: 5. Install PHP & Composer
+        run: |
+          sudo apt-get install -y php-cli php-mbstring php-xml php-pgsql php-curl php-zip unzip
+          php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+          sudo php composer-setup.php --install-dir=/usr/local/bin --filename=composer
+          php -r "unlink('composer-setup.php');"
+
+      - name: 6. Connect Tailscale as Exit Node & Show Access Info
+        env:
+          TAILSCALE_AUTHKEY: ${{ secrets.TAILSCALE_AUTHKEY }}
+        run: |
+          curl -fsSL https://tailscale.com/install.sh | sh
+          sudo tailscale up --authkey="$TAILSCALE_AUTHKEY" --hostname="runner-linux-ssh" --advertise-exit-node --accept-routes --accept-dns
+          TS_IP=$(sudo tailscale ip -4)
+          echo "=================================================="
+          echo "  >>> SSH & WEB SERVER ARE LIVE! <<<"
+          echo "  Tailscale IP  : $TS_IP"
+          echo "  Username      : runner"
+          echo "  Password      : ${{ secrets.RUNNER_PASSWORD }}"
+          echo "  ------------------------------------------------"
+          echo "  💻 SSH: ssh runner@$TS_IP"
+          echo "  🌐 Web : http://$TS_IP:8000  (Laravel)"
+          echo "  💾 Workspace: /home/runner/workspace"
+          echo "  🌍 Exit Node: Enabled (advertise-exit-node)"
+          echo "=================================================="
+
+      - name: 7. Verify gh authentication with GH_TOKEN
+        env:
+          GH_TOKEN: ${{ secrets.MY_PAT }}
+        run: |
+          gh auth status
+          echo "✅ GitHub CLI authenticated as: $(gh api user -q .login)"
+
+      - name: 8. Clone Project into workspace (from new repo and branch)
+        run: |
+          mkdir -p /home/runner/workspace
+          cd /home/runner/workspace
+          if [ ! -d h-dashboard ]; then
+            git clone -b beta https://github.com/meityasgari/h-dashboard.git
+          fi
+          cd h-dashboard
+          cp .env.example.pgsql .env
+
+      - name: 9. Start Docker Compose (PostgreSQL)
+        run: |
+          cd /home/runner/workspace/h-dashboard
+          docker compose -f docker-compose-pgsql-.yml up -d
+          echo '✅ Docker Compose started'
+
+      - name: 10. Composer, NPM, Optimize, Migrate & Seed
+        run: |
+          cd /home/runner/workspace/h-dashboard
+          composer update --no-interaction
+          npm update
+          php artisan optimize
+          php artisan migrate:fresh --seed --force
+          echo '✅ Database migrated and seeded'
+
+      - name: 11. Build frontend assets
+        run: |
+          cd /home/runner/workspace/h-dashboard
+          npm run build
+          echo '✅ Frontend assets built'
+
+      - name: 12. Install 9router globally and create symlink
+        run: |
+          npm install -g 9router
+          if [ -f ~/.npm-global/bin/9router ]; then
+            sudo ln -sf ~/.npm-global/bin/9router /usr/local/bin/9router
+            echo '✅ 9router installed and symlinked to /usr/local/bin/9router'
+          else
+            echo '⚠️ 9router binary not found after installation'
+          fi
+
+      - name: 13. Initialize 9router with INITIAL_PASSWORD
+        run: |
+          export INITIAL_PASSWORD="${{ secrets.RUNNER_PASSWORD }}"
+          9router --version || echo "9router initialized"
+          echo '✅ 9router initialized with INITIAL_PASSWORD'
+
+      - name: 14. Install Hermes Agent
+        run: |
+          curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash
+          echo '✅ Hermes Agent installed'
+
+      - name: 15. Start Laravel Development Server
+        run: |
+          cd /home/runner/workspace/h-dashboard
+          nohup php artisan serve --host=0.0.0.0 > /dev/null 2>&1 &
+          echo '✅ Laravel server started on port 8000'
+
+      - name: 16. Server Keep-Alive (5h 55m)
+        run: |
+          for i in {1..355}; do
+            sleep 60
+            echo "[$i/355] Server is active (SSH + Laravel on port 8000)..."
+          done
+
+      - name: 17. Save Workspace to Cloud
+        uses: actions/cache@v5
+        if: always()
+        with:
+          path: /home/runner/workspace
+          key: runner-ssh-workspace-${{ github.run_id }}
