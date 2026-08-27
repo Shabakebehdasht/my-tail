@@ -1,31 +1,41 @@
 # 9router backup
 
-This folder holds the 9router state that the `maity` workflow automatically
+This folder holds the 9router `data.sqlite` that the `maity` workflow automatically
 restores onto each fresh runner, so you never have to re-do the dashboard setup
 (provider = opencode, model = hy3, combo = code, copied API key).
 
-## Files committed here
+## File committed here
 
-- `data.sqlite`  -> copied to `~/.9router/db/data.sqlite`
-- `jwt-secret`   -> copied to `~/.9router/jwt-secret`
+- `data.sqlite` -> copied to `~/.9router/db/data.sqlite`
 
-Both are backed up straight from the source server (`~/.9router/`).
+Only `data.sqlite` is needed. The `jwt-secret` is NOT backed up on purpose:
+the workflow sets `INITIAL_PASSWORD` (via `RUNNER_PASSWORD`) so dashboard login
+works with a freshly generated secret. (Verified: login succeeds with only the db
+restored.)
 
-## How to refresh the backup from the source server
+## How to refresh the backup from this server
 
-On the server where 9router is already configured the way you like:
+9router must be running here (it is). Flush the WAL, then copy:
 
 ```bash
-# stop 9router first so the db is not locked
-cp ~/.9router/db/data.sqlite  /path/to/my-tail/9router/data.sqlite
-cp ~/.9router/jwt-secret       /path/to/my-tail/9router/jwt-secret
+sqlite3 ~/.9router/db/data.sqlite "PRAGMA wal_checkpoint(TRUNCATE);"
+cp ~/.9router/db/data.sqlite /path/to/my-tail/9router/data.sqlite
 cd /path/to/my-tail
-git add 9router/data.sqlite 9router/jwt-secret
-git commit -m "Refresh 9router backup"
+git add 9router/data.sqlite
+git commit -m "Refresh 9router db backup"
 git push origin main
 ```
 
 Next workflow run will pick up the new state automatically.
 
-> Note: `data.sqlite` and `jwt-secret` are committed to this repo on purpose
-> (free models only, no paid keys). Do NOT put real paid provider keys in here.
+## What the workflow does
+
+In step 12 it copies `9router/data.sqlite` -> `~/.9router/db/data.sqlite`, then
+starts 9router hidden in the background (tray mode) on port 20128:
+
+```bash
+nohup 9router --tray --skip-update -p 20128 > /tmp/9router.log 2>&1 &
+```
+
+> Note: `data.sqlite` is committed to this repo on purpose (free models only,
+> no paid keys). Do NOT put real paid provider keys in here.
