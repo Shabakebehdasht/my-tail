@@ -12,15 +12,7 @@ jobs:
       - name: 1. Checkout Repository
         uses: actions/checkout@v6
 
-      - name: 2. Restore Persistent Workspace
-        uses: actions/cache@v5
-        with:
-          path: /home/runner/workspace
-          key: runner-ssh-workspace-${{ github.run_id }}
-          restore-keys: |
-            runner-ssh-workspace-
-
-      - name: 3. Setup OpenSSH Server & Set Runner Password
+      - name: 2. Setup OpenSSH Server & Set Runner Password
         run: |
           sudo apt-get update
           sudo apt-get install -y openssh-server
@@ -30,7 +22,7 @@ jobs:
           sudo systemctl restart ssh
           sudo systemctl enable ssh
 
-      - name: 4. Setup npm, PATH, and Environment Variables Persistently
+      - name: 3. Setup npm, PATH, and Environment Variables Persistently
         env:
           GH_TOKEN: ${{ secrets.MY_PAT }}
         run: |
@@ -49,14 +41,23 @@ jobs:
           echo 'export INITIAL_PASSWORD="${{ secrets.RUNNER_PASSWORD }}"' >> ~/.profile
           echo 'INITIAL_PASSWORD="${{ secrets.RUNNER_PASSWORD }}"' | sudo tee -a /etc/environment
 
-      - name: 5. Install PHP & Composer
+      - name: 4. Install PHP 8.5 & Composer (Laravel + pgsql + redis)
         run: |
-          sudo apt-get install -y php-cli php-mbstring php-xml php-pgsql php-curl php-zip unzip
+          sudo apt-get update
+          sudo apt-get install -y software-properties-common
+          sudo add-apt-repository -y ppa:ondrej/php
+          sudo apt-get update
+          sudo apt-get install -y \
+            php8.5 php8.5-cli php8.5-common php8.5-fpm \
+            php8.5-mbstring php8.5-xml php8.5-pgsql php8.5-pdo_pgsql \
+            php8.5-curl php8.5-zip php8.5-bcmath php8.5-intl php8.5-gd \
+            php8.5-redis php8.5-tokenizer php8.5-fileinfo php8.5-ctype \
+            unzip
           php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
           sudo php composer-setup.php --install-dir=/usr/local/bin --filename=composer
           php -r "unlink('composer-setup.php');"
 
-      - name: 6. Connect Tailscale as Exit Node & Show Access Info
+      - name: 5. Connect Tailscale as Exit Node & Show Access Info
         env:
           TAILSCALE_AUTHKEY: ${{ secrets.TAILSCALE_AUTHKEY }}
         run: |
@@ -75,14 +76,14 @@ jobs:
           echo "  🌍 Exit Node: Enabled (advertise-exit-node)"
           echo "=================================================="
 
-      - name: 7. Verify gh authentication with GH_TOKEN
+      - name: 6. Verify gh authentication with GH_TOKEN
         env:
           GH_TOKEN: ${{ secrets.MY_PAT }}
         run: |
           gh auth status
           echo "✅ GitHub CLI authenticated as: $(gh api user -q .login)"
 
-      - name: 8. Clone Project into workspace (from new repo and branch)
+      - name: 7. Clone Project into workspace (from new repo and branch)
         run: |
           mkdir -p /home/runner/workspace
           cd /home/runner/workspace
@@ -92,13 +93,13 @@ jobs:
           cd h-dashboard
           cp .env.example.pgsql .env
 
-      - name: 9. Start Docker Compose (PostgreSQL)
+      - name: 8. Start Docker Compose (PostgreSQL)
         run: |
           cd /home/runner/workspace/h-dashboard
           docker compose -f docker-compose-pgsql-.yml up -d
           echo '✅ Docker Compose started'
 
-      - name: 10. Composer, NPM, Optimize, Migrate & Seed
+      - name: 9. Composer, NPM, Optimize, Migrate & Seed
         run: |
           cd /home/runner/workspace/h-dashboard
           composer update --no-interaction
@@ -107,13 +108,13 @@ jobs:
           php artisan migrate:fresh --seed --force
           echo '✅ Database migrated and seeded'
 
-      - name: 11. Build frontend assets
+      - name: 10. Build frontend assets
         run: |
           cd /home/runner/workspace/h-dashboard
           npm run build
           echo '✅ Frontend assets built'
 
-      - name: 12. Install 9router globally and create symlink
+      - name: 11. Install 9router globally and create symlink
         run: |
           npm install -g 9router
           if [ -f ~/.npm-global/bin/9router ]; then
@@ -123,33 +124,26 @@ jobs:
             echo '⚠️ 9router binary not found after installation'
           fi
 
-      - name: 13. Initialize 9router with INITIAL_PASSWORD
+      - name: 12. Initialize 9router with INITIAL_PASSWORD
         run: |
           export INITIAL_PASSWORD="${{ secrets.RUNNER_PASSWORD }}"
           9router --version || echo "9router initialized"
           echo '✅ 9router initialized with INITIAL_PASSWORD'
 
-      - name: 14. Install Hermes Agent
+      - name: 13. Install Hermes Agent
         run: |
           curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash
           echo '✅ Hermes Agent installed'
 
-      - name: 15. Start Laravel Development Server
+      - name: 14. Start Laravel Development Server
         run: |
           cd /home/runner/workspace/h-dashboard
           nohup php artisan serve --host=0.0.0.0 > /dev/null 2>&1 &
           echo '✅ Laravel server started on port 8000'
 
-      - name: 16. Server Keep-Alive (5h 55m)
+      - name: 15. Server Keep-Alive (5h 55m)
         run: |
           for i in {1..355}; do
             sleep 60
             echo "[$i/355] Server is active (SSH + Laravel on port 8000)..."
           done
-
-      - name: 17. Save Workspace to Cloud
-        uses: actions/cache@v5
-        if: always()
-        with:
-          path: /home/runner/workspace
-          key: runner-ssh-workspace-${{ github.run_id }}
