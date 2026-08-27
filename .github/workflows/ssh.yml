@@ -2,13 +2,19 @@ name: maity
 
 on:
   workflow_dispatch:
+    inputs:
+      instance:
+        description: 'Instance name (used as Tailscale hostname suffix and to pick telegram secrets, e.g. maity2)'
+        required: false
+        default: 'maity'
+        type: string
 
 jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 360
     env:
-      WF_NAME: maity   # single source of truth for the workflow name — used as Tailscale hostname too
+      WF_NAME: ${{ github.event.inputs.instance || 'maity' }}   # single source of truth — Tailscale hostname + backup path
 
     steps:
       - name: 1. Checkout Repository
@@ -151,10 +157,26 @@ jobs:
       - name: 13. Install Hermes Agent & restore config + MCPs + start Telegram gateway
         env:
           HERMES_API_KEY: ${{ secrets.HERMES_CUSTOM_API_KEY }}
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_ALLOWED_USERS: ${{ secrets.TELEGRAM_ALLOWED_USERS }}
           GH_TOKEN: ${{ secrets.MY_PAT }}
+          # Per-instance Telegram secrets (read all, pick one by WF_NAME below)
+          TG_TOKEN_MAITY: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TG_ALLOWED_MAITY: ${{ secrets.TELEGRAM_ALLOWED_USERS }}
+          TG_TOKEN_MAITY2: ${{ secrets.TELEGRAM_BOT_TOKEN_MAITY2 }}
+          TG_ALLOWED_MAITY2: ${{ secrets.TELEGRAM_ALLOWED_USERS_MAITY2 }}
         run: |
+          # Pick the right Telegram credentials for this instance.
+          case "$WF_NAME" in
+            maity2)
+              TELEGRAM_BOT_TOKEN="$TG_TOKEN_MAITY2"
+              TELEGRAM_ALLOWED_USERS="$TG_ALLOWED_MAITY2"
+              ;;
+            *)
+              TELEGRAM_BOT_TOKEN="$TG_TOKEN_MAITY"
+              TELEGRAM_ALLOWED_USERS="$TG_ALLOWED_MAITY"
+              ;;
+          esac
+          echo "✅ Using Telegram bot for instance: $WF_NAME"
+
           # 1. Install Hermes Agent
           curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash
           echo '✅ Hermes Agent installed'
