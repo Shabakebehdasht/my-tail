@@ -1,5 +1,2 @@
-go to h-dashboard
-sync meityasgari/h-dashboard branch:beta from https://github.com/asgarimehdi/h-dashboard branch:beta
-sync branch meity from beta and switch to meity
 read agents.md and use Laravel boost mcp and https://github.com/colbymchenry/codegraph and https://github.com/shadcn/improve in hermes
 when i say pr: you will open pr to https://github.com/asgarimehdi/h-dashboard/tree/beta

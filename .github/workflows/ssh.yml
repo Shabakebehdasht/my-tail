@@ -205,12 +205,21 @@ jobs:
 
           # 4. Project branch sync (deterministic — not delegated to the agent).
           #    h-dashboard is cloned earlier on branch beta; here we add the
-          #    upstream remote and create/switch to the "meity" branch.
+          #    upstream remote and create/switch to a working branch named after
+          #    this instance (WF_NAME = maity / maity2 / ...). If the branch
+          #    already exists locally we reset it to upstream/beta (sync);
+          #    otherwise we create it from upstream/beta.
           cd /home/runner/h-dashboard
           git remote add upstream https://github.com/asgarimehdi/h-dashboard.git 2>/dev/null || true
           git fetch upstream beta
-          git checkout -B meity upstream/beta
-          echo '✅ Synced: meity branch created from asgarimehdi/h-dashboard@beta'
+          if git show-ref --verify --quiet "refs/heads/${WF_NAME}"; then
+            git checkout "${WF_NAME}"
+            git reset --hard "upstream/beta"
+            echo "✅ Synced existing branch ${WF_NAME} from asgarimehdi/h-dashboard@beta"
+          else
+            git checkout -B "${WF_NAME}" "upstream/beta"
+            echo "✅ Created branch ${WF_NAME} from asgarimehdi/h-dashboard@beta"
+          fi
 
           # 5. Install MCP servers + the shadcn/improve skill.
           #    5a. CodeGraph CLI (MCP server: codegraph serve --mcp)
