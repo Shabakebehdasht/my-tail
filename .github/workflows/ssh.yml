@@ -72,7 +72,7 @@ jobs:
           echo "  ------------------------------------------------"
           echo "  💻 SSH: ssh runner@$TS_IP"
           echo "  🌐 Web : http://$TS_IP:8000  (Laravel)"
-          echo "  💾 Workspace: /home/runner/workspace"
+          echo "  💾 Project: /home/runner/h-dashboard"
           echo "  🌍 Exit Node: Enabled (advertise-exit-node)"
           echo "=================================================="
 
@@ -83,10 +83,9 @@ jobs:
           gh auth status
           echo "✅ GitHub CLI authenticated as: $(gh api user -q .login)"
 
-      - name: 7. Clone Project into workspace (from new repo and branch)
+      - name: 7. Clone Project (from new repo and branch)
         run: |
-          mkdir -p /home/runner/workspace
-          cd /home/runner/workspace
+          cd /home/runner
           if [ ! -d h-dashboard ]; then
             git clone -b beta https://github.com/meityasgari/h-dashboard.git
           fi
@@ -95,13 +94,13 @@ jobs:
 
       - name: 8. Start Docker Compose (PostgreSQL)
         run: |
-          cd /home/runner/workspace/h-dashboard
+          cd /home/runner/h-dashboard
           docker compose -f docker-compose-pgsql-.yml up -d
           echo '✅ Docker Compose started'
 
       - name: 9. Composer, NPM, Optimize, Migrate & Seed
         run: |
-          cd /home/runner/workspace/h-dashboard
+          cd /home/runner/h-dashboard
           composer update --no-interaction
           npm update
           php artisan optimize
@@ -110,7 +109,7 @@ jobs:
 
       - name: 10. Build frontend assets
         run: |
-          cd /home/runner/workspace/h-dashboard
+          cd /home/runner/h-dashboard
           npm run build
           echo '✅ Frontend assets built'
 
@@ -137,7 +136,7 @@ jobs:
 
       - name: 14. Start Laravel Development Server
         run: |
-          cd /home/runner/workspace/h-dashboard
+          cd /home/runner/h-dashboard
           nohup php artisan serve --host=0.0.0.0 > /dev/null 2>&1 &
           echo '✅ Laravel server started on port 8000'
 
