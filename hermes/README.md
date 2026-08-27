@@ -10,6 +10,10 @@ Restored automatically by the `maity` workflow (step 13).
   The API key is stored as an **env ref** (`${HERMES_CUSTOM_127_0_0_1_20128_API_KEY}`),
   NOT a literal, so no secret is committed to the repo.
 
+- `seed-message.txt` — sent **once** to Telegram right after the gateway starts
+  (a "I'm ready" ping that summarizes your default setup). Edit the file in the
+  repo to change the wording; no secret needed.
+
 ## Secrets required in GitHub repo settings
 
 The workflow reads these from `${{ secrets.* }}` and writes them into
