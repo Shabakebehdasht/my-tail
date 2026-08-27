@@ -31,18 +31,17 @@ chats pick them up on the first message — no manual setup needed.
 
 ## Running multiple instances
 
-The workflow takes a `workflow_dispatch` input `instance` (default `maity`).
-It is used as:
-- the **Tailscale hostname** (`--hostname="$WF_NAME"`) — so each instance is unique on the tailnet
-- the **Telegram bot selector** — see the `case "$WF_NAME"` block in step 13
+When you start the workflow manually, pick the **bot** from the dropdown
+(`maity` or `maity2`). That name is used as:
+- the **Tailscale hostname** (so each instance is unique on the tailnet)
+- the **Telegram bot token** selector (see the `case "$WF_NAME"` block in step 13)
 
-To spin up a second instance (`maity2`):
-1. In GitHub repo **Settings → Secrets**, add:
-   - `TELEGRAM_BOT_TOKEN_MAITY2`
-   - `TELEGRAM_ALLOWED_USERS_MAITY2`
-2. Run the workflow manually with the `instance` input set to `maity2`.
-3. (If you need more, copy the `maity2)` branch of the `case` block and add
-   matching `TG_TOKEN_*` / `TG_ALLOWED_*` env entries + secrets.)
+The **allowed user** is shared across all instances (one secret:
+`TELEGRAM_ALLOWED_USERS`).
+
+To add a third instance, just:
+1. Add its bot token secret, e.g. `TELEGRAM_BOT_TOKEN_MAITY3`
+2. Add `maity3` to the `bot` choice list and to the `case` block in step 13
 
 The 9router backup (`9router/data.sqlite`) stays shared across instances on
 purpose — all instances use the same 9router setup.
