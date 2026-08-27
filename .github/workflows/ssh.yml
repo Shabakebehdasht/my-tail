@@ -201,22 +201,36 @@ jobs:
           echo '✅ Wrote ~/.hermes/.env from secrets'
 
           # 4. Project branch sync (deterministic — not delegated to the agent).
-          #    h-dashboard is cloned earlier on branch beta; here we add the
-          #    upstream remote and create/switch to a working branch named after
-          #    this instance (WF_NAME = sydney / tannaz / ...). If the branch
-          #    already exists locally we reset it to upstream/beta (sync);
-          #    otherwise we create it from upstream/beta.
+          #    h-dashboard is cloned (step 7) from meityasgari/h-dashboard@beta; here
+          #    we add the upstream remote (asgarimehdi/h-dashboard) and switch to a
+          #    per-instance branch named after WF_NAME (sydney / tannaz / ...).
+          #    - If the branch already exists on OUR remote (meityasgari), we check it
+          #      out and rebase it onto the latest upstream/beta (keeps its own commits),
+          #      then push --force-with-lease so the state persists across runs.
+          #    - If it does NOT exist, we create it from upstream/beta and push -u.
           cd /home/runner/h-dashboard
           git remote add upstream https://github.com/asgarimehdi/h-dashboard.git 2>/dev/null || true
+          # Authenticate origin (meityasgari) with the PAT so we can push the bot branch.
+          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/meityasgari/h-dashboard.git"
           git fetch upstream beta
-          if git show-ref --verify --quiet "refs/heads/${WF_NAME}"; then
+          git fetch origin
+          if git ls-remote --heads origin "${WF_NAME}" | grep -q "${WF_NAME}"; then
             git checkout "${WF_NAME}"
-            git reset --hard "upstream/beta"
-            echo "✅ Synced existing branch ${WF_NAME} from asgarimehdi/h-dashboard@beta"
+            if git rebase "upstream/beta"; then
+              git push origin "${WF_NAME}" --force-with-lease
+              echo "✅ Synced existing branch ${WF_NAME} onto asgarimehdi/h-dashboard@beta and pushed to meityasgari"
+            else
+              git rebase --abort
+              git push origin "${WF_NAME}" --force-with-lease
+              echo "⚠️ Rebase onto beta conflicted — kept ${WF_NAME} as-is and pushed to meityasgari"
+            fi
           else
             git checkout -B "${WF_NAME}" "upstream/beta"
-            echo "✅ Created branch ${WF_NAME} from asgarimehdi/h-dashboard@beta"
+            git push -u origin "${WF_NAME}"
+            echo "✅ Created + pushed branch ${WF_NAME} from asgarimehdi/h-dashboard@beta to meityasgari"
           fi
+          # Strip the PAT from the stored remote URL so it doesn't linger in git config.
+          git remote set-url origin "https://github.com/meityasgari/h-dashboard.git"
 
           # 5. Install MCP servers + the shadcn/improve skill.
           #    5a. CodeGraph CLI (MCP server: codegraph serve --mcp)
