@@ -7,6 +7,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 360
+    env:
+      WF_NAME: maity   # single source of truth for the workflow name — used as Tailscale hostname too
 
     steps:
       - name: 1. Checkout Repository
@@ -61,7 +63,7 @@ jobs:
           TAILSCALE_AUTHKEY: ${{ secrets.TAILSCALE_AUTHKEY }}
         run: |
           curl -fsSL https://tailscale.com/install.sh | sh
-          sudo tailscale up --authkey="$TAILSCALE_AUTHKEY" --hostname="maity" --advertise-exit-node --accept-routes --accept-dns
+          sudo tailscale up --authkey="$TAILSCALE_AUTHKEY" --hostname="${{ env.WF_NAME }}" --advertise-exit-node --accept-routes --accept-dns
           TS_IP=$(sudo tailscale ip -4)
           echo "=================================================="
           echo "  >>> SSH & WEB SERVER ARE LIVE! <<<"
