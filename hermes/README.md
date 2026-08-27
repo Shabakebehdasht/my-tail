@@ -10,11 +10,21 @@ Restored automatically by the `maity` workflow (step 13).
   The API key is stored as an **env ref** (`${HERMES_CUSTOM_127_0_0_1_20128_API_KEY}`),
   NOT a literal, so no secret is committed to the repo.
 
-- `seed-message.txt` — the **one-time setup instructions** executed by Hermes
-  right after the gateway starts (in a dedicated `seed-setup` session). It tells
-  the agent to cd into h-dashboard, sync branches, read agents.md, configure the
-  Laravel boost / codegraph / shadcn-improve MCPs, and set the default PR target.
-  Edit the file in the repo to change the instructions; no secret needed.
+- `seed-message.txt` — the **one-time welcome message** sent to Telegram after
+  the gateway starts (a summary of the setup). Edit freely; no secret needed.
+
+## MCP servers & skills (configured by the workflow, not the seed)
+
+The workflow installs and wires these automatically in step 13:
+
+- **CodeGraph** (MCP) — `npm i -g @colbymchenry/codegraph`, then `codegraph init --index`
+  in h-dashboard. Registered in `config.yaml` as `command: codegraph, args: [serve, --mcp]`.
+- **Laravel Boost** (MCP) — `composer require laravel/boost`, served via
+  `php artisan boost:mcp`. Registered in `config.yaml`.
+- **shadcn/improve** (agent SKILL, not MCP) — `npx -y skills add shadcn/improve`.
+
+Because these are written by the workflow (deterministically), later Telegram
+chats pick them up on the first message — no manual setup needed.
 
 ## Secrets required in GitHub repo settings
 
