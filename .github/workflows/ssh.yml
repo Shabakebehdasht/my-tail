@@ -153,7 +153,6 @@ jobs:
           HERMES_API_KEY: ${{ secrets.HERMES_CUSTOM_API_KEY }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_ALLOWED_USERS: ${{ secrets.TELEGRAM_ALLOWED_USERS }}
-          TELEGRAM_HOME_CHANNEL: ${{ secrets.TELEGRAM_HOME_CHANNEL }}
         run: |
           # 1. Install Hermes Agent
           curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash
@@ -169,13 +168,15 @@ jobs:
           fi
 
           # 3. Write the .env with secrets pulled from GitHub Secrets.
+          #    The home channel is the same as the allowed user id (single value),
+          #    so we reuse TELEGRAM_ALLOWED_USERS for TELEGRAM_HOME_CHANNEL too.
           #    api_key in config.yaml is an env ref (${HERMES_CUSTOM_..._API_KEY}),
           #    so the actual key is supplied here — never committed to the repo.
           {
             echo "HERMES_CUSTOM_127_0_0_1_20128_API_KEY=${HERMES_API_KEY}"
             echo "TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}"
             echo "TELEGRAM_ALLOWED_USERS=${TELEGRAM_ALLOWED_USERS}"
-            echo "TELEGRAM_HOME_CHANNEL=${TELEGRAM_HOME_CHANNEL}"
+            echo "TELEGRAM_HOME_CHANNEL=${TELEGRAM_ALLOWED_USERS}"
           } > ~/.hermes/.env
           chmod 600 ~/.hermes/.env
           echo '✅ Wrote ~/.hermes/.env from secrets'

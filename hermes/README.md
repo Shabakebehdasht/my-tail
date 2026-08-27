@@ -19,8 +19,11 @@ The workflow reads these from `${{ secrets.* }}` and writes them into
 |--------------------------------|--------------------------------------------------------|
 | `HERMES_CUSTOM_API_KEY`        | the 9router API key (the one copied from its dashboard) |
 | `TELEGRAM_BOT_TOKEN`           | Telegram bot token from @BotFather                    |
-| `TELEGRAM_ALLOWED_USERS`       | comma/space-separated allowed Telegram user IDs        |
-| `TELEGRAM_HOME_CHANNEL`        | Telegram home channel id (e.g. `100651143`)            |
+| `TELEGRAM_ALLOWED_USERS`       | Telegram user id — also used as the home channel      |
+
+> `TELEGRAM_HOME_CHANNEL` is intentionally NOT a separate secret: the home
+> channel is the same as the allowed user id, so the workflow reuses
+> `TELEGRAM_ALLOWED_USERS` for it.
 
 To refresh the config from this server:
 
