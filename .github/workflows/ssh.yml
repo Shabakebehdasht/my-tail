@@ -190,16 +190,21 @@ jobs:
           fi
           echo '✅ Hermes gateway launch attempted (logs: /tmp/hermes-gateway.log)'
 
-          # 5. Send the one-time seed message (first message after setup) to Telegram.
-          #    Content lives in hermes/seed-message.txt in the repo — edit it there.
+          # 5. Run the one-time seed instructions (executed once after setup).
+          #    Uses a dedicated named session so the agent reads agents.md and
+          #    configures the MCP servers from the seed. Because this session
+          #    ends after the run, later Telegram chats start fresh sessions
+          #    that pick up the updated config (including the MCPs it set up).
+          #    --yolo bypasses approval prompts (no TTY in CI); --quiet keeps logs clean.
           SEED_FILE="${GITHUB_WORKSPACE:-.}/hermes/seed-message.txt"
           if [ -f "$SEED_FILE" ]; then
             sleep 4
-            hermes send --to telegram --file "$SEED_FILE" \
-              && echo '✅ Seed message sent to Telegram' \
-              || echo '⚠️ Seed message failed to send (check gateway logs)'
+            hermes chat --query-file "$SEED_FILE" --in /home/runner/h-dashboard \
+              --continue seed-setup --create-if-missing --yolo --quiet \
+              && echo '✅ Seed instructions executed (session: seed-setup)' \
+              || echo '⚠️ Seed execution failed (check /tmp/hermes-gateway.log)'
           else
-            echo '⚠️ hermes/seed-message.txt not found — skipping seed message'
+            echo '⚠️ hermes/seed-message.txt not found — skipping seed run'
           fi
 
       - name: 14. Start Laravel Development Server
