@@ -158,6 +158,8 @@ jobs:
           # 1. Install Hermes Agent
           curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash
           echo '✅ Hermes Agent installed'
+          # Make sure uvx (used by the postgis MCP) is on PATH — Hermes ships it under ~/.hermes/bin
+          export PATH="$HOME/.hermes/bin:$PATH"
 
           # 2. Restore the Hermes config (model = custom provider @ 127.0.0.1:20128, model "code", 512k ctx)
           mkdir -p ~/.hermes
@@ -217,8 +219,20 @@ jobs:
           #    Appended only if not already present. Written with printf to stay
           #    safe inside the YAML block scalar (no heredoc delimiter issues).
           if ! grep -q "mcp_servers" ~/.hermes/config.yaml; then
-            printf '\nmcp_servers:\n  codegraph:\n    command: codegraph\n    args: ["serve", "--mcp"]\n    cwd: /home/runner/h-dashboard\n  laravel-boost:\n    command: php\n    args: ["artisan", "boost:mcp"]\n    cwd: /home/runner/h-dashboard\n' >> ~/.hermes/config.yaml
-            echo '✅ Appended mcp_servers (codegraph + laravel-boost) to config.yaml'
+            # Build the PostGIS connection string from h-dashboard's .env (creds are static there).
+            HD_ENV=/home/runner/h-dashboard/.env
+            if [ -f "$HD_ENV" ]; then
+              PG_HOST=$(grep -E '^DB_HOST=' "$HD_ENV" | cut -d= -f2-)
+              PG_PORT=$(grep -E '^DB_PORT=' "$HD_ENV" | cut -d= -f2-)
+              PG_DB=$(grep -E '^DB_DATABASE=' "$HD_ENV" | cut -d= -f2-)
+              PG_USER=$(grep -E '^DB_USERNAME=' "$HD_ENV" | cut -d= -f2-)
+              PG_PASS=$(grep -E '^DB_PASSWORD=' "$HD_ENV" | cut -d= -f2-)
+              PG_URL="postgresql://${PG_USER}:${PG_PASS}@${PG_HOST}:${PG_PORT}/${PG_DB}"
+            else
+              PG_URL="postgresql://h_dashboard:example_6162e0f827d119b0@127.0.0.1:5432/h_dashboard"
+            fi
+            printf '\nmcp_servers:\n  codegraph:\n    command: codegraph\n    args: ["serve", "--mcp"]\n    cwd: /home/runner/h-dashboard\n  laravel-boost:\n    command: php\n    args: ["artisan", "boost:mcp"]\n    cwd: /home/runner/h-dashboard\n  postgis:\n    command: uvx\n    args: ["mcp-postgis"]\n    env:\n      MCP_POSTGIS_DATABASE_URL: "%s"\n      MCP_POSTGIS_MODE: read_only\n' "$PG_URL" >> ~/.hermes/config.yaml
+            echo '✅ Appended mcp_servers (codegraph + laravel-boost + postgis) to config.yaml'
           else
             echo '✅ mcp_servers already present in config.yaml'
           fi

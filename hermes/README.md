@@ -22,6 +22,9 @@ The workflow installs and wires these automatically in step 13:
 - **Laravel Boost** (MCP) — `composer require laravel/boost`, served via
   `php artisan boost:mcp`. Registered in `config.yaml`.
 - **shadcn/improve** (agent SKILL, not MCP) — `npx -y skills add shadcn/improve`.
+- **PostGIS** (MCP) — `uvx mcp-postgis`, connected to the h-dashboard Postgres
+  (creds read from h-dashboard/.env at runtime; falls back to the static
+  default). Registered in `config.yaml` as `MCP_POSTGIS_MODE: read_only`.
 
 Because these are written by the workflow (deterministically), later Telegram
 chats pick them up on the first message — no manual setup needed.
