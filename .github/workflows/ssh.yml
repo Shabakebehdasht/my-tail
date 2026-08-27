@@ -61,7 +61,7 @@ jobs:
           TAILSCALE_AUTHKEY: ${{ secrets.TAILSCALE_AUTHKEY }}
         run: |
           curl -fsSL https://tailscale.com/install.sh | sh
-          sudo tailscale up --authkey="$TAILSCALE_AUTHKEY" --hostname="runner-linux-ssh" --advertise-exit-node --accept-routes --accept-dns
+          sudo tailscale up --authkey="$TAILSCALE_AUTHKEY" --hostname="maity" --advertise-exit-node --accept-routes --accept-dns
           TS_IP=$(sudo tailscale ip -4)
           echo "=================================================="
           echo "  >>> SSH & WEB SERVER ARE LIVE! <<<"
