@@ -29,16 +29,23 @@ The workflow installs and wires these automatically in step 13:
 Because these are written by the workflow (deterministically), later Telegram
 chats pick them up on the first message — no manual setup needed.
 
-## Secrets required in GitHub repo settings
+## Running multiple instances
 
-The workflow reads these from `${{ secrets.* }}` and writes them into
-`~/.hermes/.env` at runtime (never committed):
+The workflow takes a `workflow_dispatch` input `instance` (default `maity`).
+It is used as:
+- the **Tailscale hostname** (`--hostname="$WF_NAME"`) — so each instance is unique on the tailnet
+- the **Telegram bot selector** — see the `case "$WF_NAME"` block in step 13
 
-| Secret name                    | Value                                                  |
-|--------------------------------|--------------------------------------------------------|
-| `HERMES_CUSTOM_API_KEY`        | the 9router API key (the one copied from its dashboard) |
-| `TELEGRAM_BOT_TOKEN`           | Telegram bot token from @BotFather                    |
-| `TELEGRAM_ALLOWED_USERS`       | Telegram user id — also used as the home channel      |
+To spin up a second instance (`maity2`):
+1. In GitHub repo **Settings → Secrets**, add:
+   - `TELEGRAM_BOT_TOKEN_MAITY2`
+   - `TELEGRAM_ALLOWED_USERS_MAITY2`
+2. Run the workflow manually with the `instance` input set to `maity2`.
+3. (If you need more, copy the `maity2)` branch of the `case` block and add
+   matching `TG_TOKEN_*` / `TG_ALLOWED_*` env entries + secrets.)
+
+The 9router backup (`9router/data.sqlite`) stays shared across instances on
+purpose — all instances use the same 9router setup.
 
 > `TELEGRAM_HOME_CHANNEL` is intentionally NOT a separate secret: the home
 > channel is the same as the allowed user id, so the workflow reuses
