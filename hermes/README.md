@@ -1,0 +1,36 @@
+# Hermes Agent backup
+
+Restored automatically by the `maity` workflow (step 13).
+
+## Committed here
+
+- `config.yaml` — the Hermes config. It points the default model at the
+  custom OpenAI-compatible provider `http://127.0.0.1:20128/v1` (the 9router
+  gateway started earlier in the workflow), model `code`, context `512000`.
+  The API key is stored as an **env ref** (`${HERMES_CUSTOM_127_0_0_1_20128_API_KEY}`),
+  NOT a literal, so no secret is committed to the repo.
+
+## Secrets required in GitHub repo settings
+
+The workflow reads these from `${{ secrets.* }}` and writes them into
+`~/.hermes/.env` at runtime (never committed):
+
+| Secret name                    | Value                                                  |
+|--------------------------------|--------------------------------------------------------|
+| `HERMES_CUSTOM_API_KEY`        | the 9router API key (the one copied from its dashboard) |
+| `TELEGRAM_BOT_TOKEN`           | Telegram bot token from @BotFather                    |
+| `TELEGRAM_ALLOWED_USERS`       | comma/space-separated allowed Telegram user IDs        |
+| `TELEGRAM_HOME_CHANNEL`        | Telegram home channel id (e.g. `100651143`)            |
+
+To refresh the config from this server:
+
+```bash
+cp ~/.hermes/config.yaml /path/to/my-tail/hermes/config.yaml
+cd /path/to/my-tail
+git add hermes/config.yaml
+git commit -m "Refresh hermes config"
+git push origin main
+```
+
+> The actual secret values live only in GitHub Secrets (and in the live
+> server's ~/.hermes/.env). Do NOT commit a real .env here.
