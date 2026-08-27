@@ -11,6 +11,7 @@ on:
         options:
           - maity
           - maity2
+          - sydney
 
 jobs:
   build:
