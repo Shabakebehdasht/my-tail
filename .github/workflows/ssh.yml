@@ -72,6 +72,7 @@ jobs:
           echo "  ------------------------------------------------"
           echo "  💻 SSH: ssh runner@$TS_IP"
           echo "  🌐 Web : http://$TS_IP:8000  (Laravel)"
+          echo "  🔀 9Router: http://$TS_IP:20128  (dashboard)"
           echo "  💾 Project: /home/runner/h-dashboard"
           echo "  🌍 Exit Node: Enabled (advertise-exit-node)"
           echo "=================================================="
@@ -123,11 +124,33 @@ jobs:
             echo '⚠️ 9router binary not found after installation'
           fi
 
-      - name: 12. Initialize 9router with INITIAL_PASSWORD
+      - name: 12. Restore 9router backup (db + jwt-secret) & start hidden
         run: |
           export INITIAL_PASSWORD="${{ secrets.RUNNER_PASSWORD }}"
-          9router --version || echo "9router initialized"
-          echo '✅ 9router initialized with INITIAL_PASSWORD'
+          # Make sure the data dir exists
+          mkdir -p ~/.9router/db
+          BACKUP_DIR="${GITHUB_WORKSPACE:-.}/9router"
+          # Restore the backed-up state from the repo (committed in 9router/)
+          if [ -f "$BACKUP_DIR/data.sqlite" ]; then
+            cp "$BACKUP_DIR/data.sqlite" ~/.9router/db/data.sqlite
+            echo '✅ Restored 9router db from repo backup'
+          else
+            echo '⚠️ 9router/data.sqlite not found in repo — starting fresh'
+          fi
+          if [ -f "$BACKUP_DIR/jwt-secret" ]; then
+            cp "$BACKUP_DIR/jwt-secret" ~/.9router/jwt-secret
+            echo '✅ Restored 9router jwt-secret from repo backup'
+          else
+            echo '⚠️ 9router/jwt-secret not found in repo — new secret will be generated'
+          fi
+          # Start 9router in the background (hidden) on the default port 20128
+          nohup 9router > /tmp/9router.log 2>&1 &
+          sleep 5
+          if curl -fsS http://localhost:20128 > /dev/null 2>&1; then
+            echo '✅ 9router is live on http://localhost:20128'
+          else
+            echo '⚠️ 9router did not come up — check /tmp/9router.log'
+          fi
 
       - name: 13. Install Hermes Agent
         run: |
