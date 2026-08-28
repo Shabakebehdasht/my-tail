@@ -214,6 +214,14 @@ jobs:
           git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/meityasgari/h-dashboard.git"
           git fetch upstream beta
           git fetch origin
+          # Step 9 (composer update / npm update) rewrites composer.lock &
+          # package-lock.json, and step 10 (npm run build) may touch tracked
+          # files — leaving the working tree dirty. Git refuses to switch
+          # branches or rebase with uncommitted changes, so discard that
+          # incidental drift NOW (before checkout). Committed bot-specific
+          # commits are preserved; only the uncommitted lockfile/build drift
+          # from steps 9-10 is reverted.
+          git checkout -- . 2>/dev/null || true
           if git ls-remote --heads origin "${WF_NAME}" | grep -q "${WF_NAME}"; then
             git checkout "${WF_NAME}"
             if git rebase "upstream/beta"; then
