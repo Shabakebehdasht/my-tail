@@ -209,10 +209,16 @@ jobs:
           #      then push --force-with-lease so the state persists across runs.
           #    - If it does NOT exist, we create it from upstream/beta and push -u.
           cd /home/runner/h-dashboard
-          # Set the committer identity so rebased/pushed commits are attributed
-          # to the repo owner (meityasgari) instead of a default runner identity.
-          git config user.name "meityasgari"
-          git config user.email "meityasgari@users.noreply.github.com"
+          # Set the committer identity GLOBALLY (system-wide) so rebased/pushed
+          # commits are attributed to the repo owner (meityasgari) instead of a
+          # default runner identity. Global scope is used so the identity survives
+          # branch switches / rebases and any git invocation in later steps.
+          # NOTE: do NOT rely on `gh auth setup-git` for auth here — on this image
+          # it writes a stray empty `helper =` line into gitconfig that BREAKS the
+          # credential helper and makes `git push` fail with "could not read
+          # Username". Auth is done explicitly via the PAT in the remote URL below.
+          git config --global user.name "meityasgari"
+          git config --global user.email "meityasgari@users.noreply.github.com"
           git remote add upstream https://github.com/asgarimehdi/h-dashboard.git 2>/dev/null || true
           # Authenticate origin (meityasgari) with the PAT so we can push the bot branch.
           git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/meityasgari/h-dashboard.git"
