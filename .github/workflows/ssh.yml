@@ -9,7 +9,6 @@ jobs:
     timeout-minutes: 360
     env:
       REPO_ORIGIN: https://github.com/meityasgari/h-dashboard.git
-      REPO_UPSTREAM: https://github.com/asgarimehdi/h-dashboard.git
       WF_NAME: kimya
 
     steps:
@@ -216,7 +215,7 @@ jobs:
           # Username". Auth is done explicitly via the PAT in the remote URL below.
           git config --global user.name "meityasgari"
           git config --global user.email "meityasgari@users.noreply.github.com"
-          git remote add upstream "$REPO_UPSTREAM" 2>/dev/null || true
+          git remote add upstream https://github.com/asgarimehdi/h-dashboard.git 2>/dev/null || true
           # Authenticate origin (meityasgari) with the PAT so we can push the bot branch.
           git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/meityasgari/h-dashboard.git"
           git fetch upstream beta
