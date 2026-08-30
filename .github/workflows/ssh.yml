@@ -8,6 +8,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 360
     env:
+      REPO_ORIGIN: https://github.com/meityasgari/h-dashboard.git
+      REPO_UPSTREAM: https://github.com/asgarimehdi/h-dashboard.git
       WF_NAME: sydney
 
     steps:
@@ -95,7 +97,7 @@ jobs:
         run: |
           cd /home/runner
           if [ ! -d h-dashboard ]; then
-            git clone -b beta https://github.com/meityasgari/h-dashboard.git
+            git clone -b beta "$REPO_ORIGIN"
           fi
           cd h-dashboard
           cp .env.example.pgsql .env
@@ -214,7 +216,7 @@ jobs:
           # Username". Auth is done explicitly via the PAT in the remote URL below.
           git config --global user.name "meityasgari"
           git config --global user.email "meityasgari@users.noreply.github.com"
-          git remote add upstream https://github.com/asgarimehdi/h-dashboard.git 2>/dev/null || true
+          git remote add upstream "$REPO_UPSTREAM" 2>/dev/null || true
           # Authenticate origin (meityasgari) with the PAT so we can push the bot branch.
           git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/meityasgari/h-dashboard.git"
           git fetch upstream beta
@@ -243,7 +245,7 @@ jobs:
             echo "✅ Created + pushed branch ${WF_NAME} from asgarimehdi/h-dashboard@beta to meityasgari"
           fi
           # Strip the PAT from the stored remote URL so it doesn't linger in git config.
-          git remote set-url origin "https://github.com/meityasgari/h-dashboard.git"
+          git remote set-url origin "$REPO_ORIGIN"
 
           # 5. Install MCP servers + the shadcn/improve skill.
           #    5a. CodeGraph CLI (MCP server: codegraph serve --mcp)
