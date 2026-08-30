@@ -85,10 +85,12 @@ jobs:
           echo "  🌍 Exit Node: Enabled (advertise-exit-node)"
           echo "=================================================="
 
-      - name: 6. Verify gh authentication with GH_TOKEN
+      - name: 6. Authenticate gh CLI & configure git credential helper
         env:
           GH_TOKEN: ${{ secrets.MY_PAT }}
         run: |
+          echo "$GH_TOKEN" | gh auth login --with-token
+          gh auth setup-git
           gh auth status
           echo "✅ GitHub CLI authenticated as: $(gh api user -q .login)"
 
