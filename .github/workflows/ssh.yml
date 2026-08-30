@@ -2,24 +2,13 @@ name: meity
 
 on:
   workflow_dispatch:
-    inputs:
-      bot:
-        description: 'Which Telegram bot / instance to use'
-        required: true
-        default: 'sydney'
-        type: choice
-        options:
-          - sydney
-          - tannaz
-          - kimya
-          - celin
 
 jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 360
     env:
-      WF_NAME: ${{ github.event.inputs.bot }}   # Tailscale hostname = selected bot name
+      WF_NAME: tannaz
 
     steps:
       - name: 1. Checkout Repository
