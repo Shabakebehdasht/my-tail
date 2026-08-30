@@ -75,6 +75,12 @@ jobs:
         run: |
           curl -fsSL https://tailscale.com/install.sh | sh
           sudo tailscale up --authkey="$TAILSCALE_AUTHKEY" --hostname="${{ env.WF_NAME }}" --advertise-exit-node --accept-routes --accept-dns
+
+          # Enable IP forwarding (required for exit node to route traffic)
+          echo 'net.ipv4.ip_forward = 1' | sudo tee -a /etc/sysctl.conf
+          echo 'net.ipv6.conf.all.forwarding = 1' | sudo tee -a /etc/sysctl.conf
+          sudo sysctl -p /etc/sysctl.conf
+
           TS_IP=$(sudo tailscale ip -4)
           echo "=================================================="
           echo "  >>> SSH & WEB SERVER ARE LIVE! <<<"
