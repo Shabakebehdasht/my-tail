@@ -277,6 +277,10 @@ jobs:
           npx -y skills add shadcn/improve 2>&1 | tail -3 || true
           echo '✅ shadcn/improve skill added'
 
+          #    5d. Context7 MCP (documentation lookup)
+          hermes mcp install context7 2>&1 || true
+          echo '✅ Context7 MCP installed'
+
           # 6. Write the mcp_servers block into ~/.hermes/config.yaml.
           #    Appended only if not already present. Written with printf to stay
           #    safe inside the YAML block scalar (no heredoc delimiter issues).
