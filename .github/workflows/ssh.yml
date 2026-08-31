@@ -329,3 +329,9 @@ jobs:
             sleep 60
             echo "[$i/355] Server is active (SSH + Laravel on port 8000)..."
           done
+
+      - name: 16. Tailscale Logout (cleanup on shutdown)
+        if: always()
+        run: |
+          sudo tailscale logout || true
+          echo "✅ Tailscale logout executed — hostname freed"
