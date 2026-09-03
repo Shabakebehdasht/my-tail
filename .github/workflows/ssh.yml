@@ -1,6 +1,8 @@
-name: meity
+name: bahar
 
 on:
+  schedule:
+    - cron: '0 */6 * * *'  # روشن شدن خودکار هر ۶ ساعت یک‌بار (۲۴/۷)
   workflow_dispatch:
 
 jobs:
@@ -8,8 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 360
     env:
-      REPO_ORIGIN: https://github.com/meityasgari/h-dashboard.git
-      WF_NAME: kimya
+      REPO_ORIGIN: https://github.com/Shabakebehdasht/h-dashboard.git
+      WF_NAME: bahar
 
     steps:
       - name: 1. Checkout Repository
