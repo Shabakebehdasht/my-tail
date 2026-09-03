@@ -1,6 +1,8 @@
-name: meity
+name: rebecca
 
 on:
+  schedule:
+    - cron: '0 */6 * * *'  # روشن شدن خودکار هر ۶ ساعت یک‌بار (۲۴/۷)
   workflow_dispatch:
 
 jobs:
@@ -8,8 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 360
     env:
-      REPO_ORIGIN: https://github.com/meityasgari/h-dashboard.git
-      WF_NAME: tannaz
+      REPO_ORIGIN: https://github.com/Shabakebehdasht/h-dashboard.git
+      WF_NAME: rebecca
 
     steps:
       - name: 1. Checkout Repository
@@ -200,27 +202,27 @@ jobs:
           echo '✅ Wrote ~/.hermes/.env from secrets'
 
           # 4. Project branch sync (deterministic — not delegated to the agent).
-          #    h-dashboard is cloned (step 7) from meityasgari/h-dashboard@beta; here
+          #    h-dashboard is cloned (step 7) from Shabakebehdasht/h-dashboard@beta; here
           #    we add the upstream remote (asgarimehdi/h-dashboard) and switch to a
           #    per-instance branch named after WF_NAME (sydney / tannaz / ...).
-          #    - If the branch already exists on OUR remote (meityasgari), we check it
+          #    - If the branch already exists on OUR remote (Shabakebehdasht), we check it
           #      out and rebase it onto the latest upstream/beta (keeps its own commits),
           #      then push --force-with-lease so the state persists across runs.
           #    - If it does NOT exist, we create it from upstream/beta and push -u.
           cd /home/runner/h-dashboard
           # Set the committer identity GLOBALLY (system-wide) so rebased/pushed
-          # commits are attributed to the repo owner (meityasgari) instead of a
+          # commits are attributed to the repo owner (Shabakebehdasht) instead of a
           # default runner identity. Global scope is used so the identity survives
           # branch switches / rebases and any git invocation in later steps.
           # NOTE: do NOT rely on `gh auth setup-git` for auth here — on this image
           # it writes a stray empty `helper =` line into gitconfig that BREAKS the
           # credential helper and makes `git push` fail with "could not read
           # Username". Auth is done explicitly via the PAT in the remote URL below.
-          git config --global user.name "meityasgari"
-          git config --global user.email "meityasgari@users.noreply.github.com"
+          git config --global user.name "Shabakebehdasht"
+          git config --global user.email "Shabakebehdasht@users.noreply.github.com"
           git remote add upstream https://github.com/asgarimehdi/h-dashboard.git 2>/dev/null || true
-          # Authenticate origin (meityasgari) with the PAT so we can push the bot branch.
-          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/meityasgari/h-dashboard.git"
+          # Authenticate origin (Shabakebehdasht) with the PAT so we can push the bot branch.
+          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/Shabakebehdasht/h-dashboard.git"
           git fetch upstream beta
           git fetch origin
           # Step 9 (composer update / npm update) rewrites composer.lock &
@@ -235,16 +237,16 @@ jobs:
             git checkout "${WF_NAME}"
             if git rebase "upstream/beta"; then
               git push origin "${WF_NAME}" --force-with-lease
-              echo "✅ Synced existing branch ${WF_NAME} onto asgarimehdi/h-dashboard@beta and pushed to meityasgari"
+              echo "✅ Synced existing branch ${WF_NAME} onto asgarimehdi/h-dashboard@beta and pushed to Shabakebehdasht"
             else
               git rebase --abort
               git push origin "${WF_NAME}" --force-with-lease
-              echo "⚠️ Rebase onto beta conflicted — kept ${WF_NAME} as-is and pushed to meityasgari"
+              echo "⚠️ Rebase onto beta conflicted — kept ${WF_NAME} as-is and pushed to Shabakebehdasht"
             fi
           else
             git checkout -B "${WF_NAME}" "upstream/beta"
             git push -u origin "${WF_NAME}"
-            echo "✅ Created + pushed branch ${WF_NAME} from asgarimehdi/h-dashboard@beta to meityasgari"
+            echo "✅ Created + pushed branch ${WF_NAME} from asgarimehdi/h-dashboard@beta to Shabakebehdasht"
           fi
           # Strip the PAT from the stored remote URL so it doesn't linger in git config.
           git remote set-url origin "$REPO_ORIGIN"
