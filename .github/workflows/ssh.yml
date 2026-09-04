@@ -1,8 +1,6 @@
 name: rebecca
 
 on:
-  schedule:
-    - cron: '0 */6 * * *'  # روشن شدن خودکار هر ۶ ساعت یک‌بار (۲۴/۷)
   workflow_dispatch:
 
 jobs:
@@ -20,6 +18,7 @@ jobs:
       - name: 2. Setup OpenSSH Server & Set Runner Password
         run: |
           sudo apt-get update
+          sudo apt-get upgrade -y
           sudo apt-get install -y openssh-server
           echo "runner:${{ secrets.RUNNER_PASSWORD }}" | sudo chpasswd
           sudo sed -i 's/^#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config
@@ -185,6 +184,10 @@ jobs:
           else
             echo '⚠️ hermes/config.yaml not found in repo — using default config'
           fi
+          if [ -f "${GITHUB_WORKSPACE:-.}/hermes/SOUL.md" ]; then
+            cp "${GITHUB_WORKSPACE:-.}/hermes/SOUL.md" ~/.hermes/SOUL.md
+            echo '✅ Restored ~/.hermes/SOUL.md (identity)'
+          fi
 
           # 3. Write the .env with secrets pulled from GitHub Secrets.
           #    The home channel is the same as the allowed user id (single value),
@@ -308,15 +311,39 @@ jobs:
           fi
           echo '✅ Hermes gateway launch attempted (logs: /tmp/hermes-gateway.log)'
 
-          # 8. Send the one-time seed message (welcome/summary) to Telegram.
+          # 8. Seed instructions -> system prompt + real execution + welcome message.
+          #    `hermes send` alone NEVER executes — it only relays text.
+          #    So: (a) write seed into h-dashboard/.hermes.md (system prompt),
+          #    (b) run real `hermes chat -q` warmup to verify model+MCPs,
+          #    (c) send a proactive intro to Telegram via --file.
           SEED_FILE="${GITHUB_WORKSPACE:-.}/hermes/seed-message.txt"
+          WELCOME_FILE="${GITHUB_WORKSPACE:-.}/hermes/welcome-message.txt"
+          HD_DIR=/home/runner/h-dashboard
           if [ -f "$SEED_FILE" ]; then
             sleep 3
-            hermes send --to telegram --file "$SEED_FILE" \
-              && echo '✅ Seed message sent to Telegram' \
-              || echo '⚠️ Seed message failed to send'
+            # 8a. Persistent instructions -> project context (system prompt).
+            {
+              echo '# h-dashboard instance rules (seeded at boot)'
+              echo ''
+              cat "$SEED_FILE"
+            } > "$HD_DIR/.hermes.md"
+            echo '✅ Seed instructions written to h-dashboard/.hermes.md (system prompt)'
+            # 8b. Real agent execution (warmup: model + MCPs + tools).
+            (cd "$HD_DIR" && hermes chat -q "$(cat "$SEED_FILE") -- confirm each item is ready, one line per item" > /tmp/seed-warmup.log 2>&1) \
+              && echo '✅ Seed warmup executed via hermes chat' \
+              || echo '⚠️ Seed warmup failed (see /tmp/seed-warmup.log)'
+            # 8c. Proactive intro so you know everything is ready.
+            if [ -f "$WELCOME_FILE" ]; then
+              hermes send --to telegram --file "$WELCOME_FILE" \
+                && echo '✅ Welcome message sent to Telegram' \
+                || echo '⚠️ Welcome message failed to send'
+            else
+              hermes send --to telegram "Rebecca online and ready." \
+                && echo '✅ Welcome message sent to Telegram' \
+                || echo '⚠️ Welcome message failed to send'
+            fi
           else
-            echo '⚠️ hermes/seed-message.txt not found — skipping seed message'
+            echo '⚠️ hermes/seed-message.txt not found — skipping seed prompt'
           fi
 
       - name: 14. Start Laravel Development Server
