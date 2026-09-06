@@ -711,5 +711,5 @@ jobs:
         run: |
           sudo tailscale logout || true
 
-          echo "✅ Tailscale logout executed"
-```
+          echo "✅ Tailscale logout executed — hostname freed"
+
