@@ -113,7 +113,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.MY_PAT }}
         run: |
-          unset GH_TOKEN
+          # unset GH_TOKEN  # این خط کامنت شده تا توکن حفظ شود
 
           echo "${{ secrets.MY_PAT }}" | gh auth login --with-token
 
@@ -297,7 +297,6 @@ jobs:
         if: always()
         env:
           GH_TOKEN: ${{ secrets.MY_PAT }}
-
         run: |
           set +e
 
@@ -319,8 +318,9 @@ jobs:
           git config user.name "Shabakebehd"
           git config user.email "Shabakebehd@users.noreply.github.com"
 
+          # استفاده از GH_TOKEN به جای x-access-token
           git remote set-url origin \
-            "https://x-access-token:${GH_TOKEN}@github.com/Shabakebehdasht/my-tail.git"
+            "https://${GH_TOKEN}@github.com/Shabakebehdasht/my-tail.git"
 
           # ----------------------------------------------------------
           # Function: Sync Hermes to GitHub
@@ -574,7 +574,6 @@ jobs:
         if: always()
         env:
           GH_TOKEN: ${{ secrets.MY_PAT }}
-
         run: |
           set +e
 
@@ -587,8 +586,9 @@ jobs:
           git config user.name "Shabakebehd"
           git config user.email "Shabakebehd@users.noreply.github.com"
 
+          # استفاده از GH_TOKEN به جای x-access-token
           git remote set-url origin \
-            "https://x-access-token:${GH_TOKEN}@github.com/Shabakebehdasht/my-tail.git"
+            "https://${GH_TOKEN}@github.com/Shabakebehdasht/my-tail.git"
 
           mkdir -p hermes/memories
           mkdir -p hermes/skills
@@ -711,4 +711,3 @@ jobs:
           sudo tailscale logout || true
 
           echo "✅ Tailscale logout executed — hostname freed"
-
