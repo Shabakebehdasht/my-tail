@@ -2,40 +2,64 @@ name: linker
 
 on:
   schedule:
-    - cron: '0 */6 * * *'  # روشن شدن خودکار هر ۶ ساعت یک‌بار (۲۴/۷)
+    - cron: '0 */6 * * *'  # اجرا هر ۶ ساعت
   workflow_dispatch:
+
+# جلوگیری از اجرای همزمان چند instance از همین workflow
+# روی یک repository/branch
+concurrency:
+  group: hermes-sync-${{ github.repository }}-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 360
+
     env:
       WF_NAME: sadaf
 
     steps:
+
+      # ============================================================
+      # 1. Checkout Repository
+      # ============================================================
       - name: 1. Checkout Repository
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
+      # ============================================================
+      # 2. Setup OpenSSH Server
+      # ============================================================
       - name: 2. Setup OpenSSH Server & Set Runner Password
         run: |
           sudo apt-get update
           sudo apt-get upgrade -y
           sudo apt-get install -y openssh-server
+
           echo "runner:${{ secrets.RUNNER_PASSWORD }}" | sudo chpasswd
+
           sudo sed -i 's/^#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config
           sudo sed -i 's/^PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
+
           sudo systemctl restart ssh
           sudo systemctl enable ssh
 
+      # ============================================================
+      # 3. Setup npm / PATH / Environment
+      # ============================================================
       - name: 3. Setup npm, PATH, and Environment Variables Persistently
         env:
           GH_TOKEN: ${{ secrets.MY_PAT }}
         run: |
           mkdir -p ~/.npm-global
+
           npm config set prefix '~/.npm-global'
 
           echo 'export PATH="$HOME/.npm-global/bin:$PATH"' >> ~/.bashrc
           echo 'export PATH="$HOME/.npm-global/bin:$PATH"' >> ~/.profile
+
           export PATH="$HOME/.npm-global/bin:$PATH"
 
           echo "export GH_TOKEN=$GH_TOKEN" >> ~/.bashrc
@@ -46,129 +70,187 @@ jobs:
           echo 'export INITIAL_PASSWORD="${{ secrets.RUNNER_PASSWORD }}"' >> ~/.profile
           echo 'INITIAL_PASSWORD="${{ secrets.RUNNER_PASSWORD }}"' | sudo tee -a /etc/environment
 
+      # ============================================================
+      # 4. Tailscale
+      # ============================================================
       - name: 4. Connect Tailscale as Exit Node & Show Access Info
         env:
           TAILSCALE_AUTHKEY: ${{ secrets.TAILSCALE_AUTHKEY }}
         run: |
           curl -fsSL https://tailscale.com/install.sh | sh
-          sudo tailscale up --authkey="$TAILSCALE_AUTHKEY" --hostname="${{ env.WF_NAME }}" --advertise-exit-node --accept-routes --accept-dns
 
-          # Enable IP forwarding (required for exit node to route traffic)
+          sudo tailscale up \
+            --authkey="$TAILSCALE_AUTHKEY" \
+            --hostname="${{ env.WF_NAME }}" \
+            --advertise-exit-node \
+            --accept-routes \
+            --accept-dns
+
           echo 'net.ipv4.ip_forward = 1' | sudo tee -a /etc/sysctl.conf
           echo 'net.ipv6.conf.all.forwarding = 1' | sudo tee -a /etc/sysctl.conf
+
           sudo sysctl -p /etc/sysctl.conf
 
           TS_IP=$(sudo tailscale ip -4)
+
           echo "=================================================="
           echo "  >>> SSH & 9ROUTER ARE LIVE! <<<"
           echo "  Tailscale IP  : $TS_IP"
           echo "  Username      : runner"
           echo "  Password      : ${{ secrets.RUNNER_PASSWORD }}"
           echo "  ------------------------------------------------"
-          echo "  💻 SSH: ssh runner@$TS_IP"
-          echo "  🔀 9Router: http://$TS_IP:20128  (dashboard)"
-          echo "  💾 Project: /home/runner/my-tail"
-          echo "  🌍 Exit Node: Enabled (advertise-exit-node)"
+          echo "  SSH: ssh runner@$TS_IP"
+          echo "  9Router: http://$TS_IP:20128"
+          echo "  Project: /home/runner/my-tail"
+          echo "  Exit Node: Enabled"
           echo "=================================================="
 
+      # ============================================================
+      # 5. GitHub CLI
+      # ============================================================
       - name: 5. Authenticate gh CLI & configure git credential helper
         env:
           GH_TOKEN: ${{ secrets.MY_PAT }}
         run: |
           unset GH_TOKEN
+
           echo "${{ secrets.MY_PAT }}" | gh auth login --with-token
+
           gh auth setup-git
           gh auth status
+
           echo "✅ GitHub CLI authenticated as: $(gh api user -q .login)"
 
+      # ============================================================
+      # 6. Clone my-tail
+      # ============================================================
       - name: 6. Clone my-tail Project
         run: |
           cd /home/runner
+
           if [ ! -d my-tail ]; then
             git clone https://github.com/Shabakebehdasht/my-tail.git
           fi
+
           cd my-tail
+
           echo "✅ my-tail cloned successfully"
 
+      # ============================================================
+      # 7. Install 9router
+      # ============================================================
       - name: 7. Install 9router globally and create symlink
         run: |
           npm install -g 9router
+
           if [ -f ~/.npm-global/bin/9router ]; then
             sudo ln -sf ~/.npm-global/bin/9router /usr/local/bin/9router
+
             echo '✅ 9router installed and symlinked to /usr/local/bin/9router'
           else
             echo '⚠️ 9router binary not found after installation'
           fi
 
-      - name: 8. Restore 9router db backup & start hidden (tray)
+      # ============================================================
+      # 8. Restore 9router database
+      # ============================================================
+      - name: 8. Restore 9router db backup & start hidden
         run: |
           export INITIAL_PASSWORD="${{ secrets.RUNNER_PASSWORD }}"
-          # Make sure the data dir exists
+
           mkdir -p ~/.9router/db
+
           BACKUP_DIR="${GITHUB_WORKSPACE:-.}/9router"
-          # Restore the backed-up state from the repo (committed in 9router/data.sqlite)
+
           if [ -f "$BACKUP_DIR/data.sqlite" ]; then
             cp "$BACKUP_DIR/data.sqlite" ~/.9router/db/data.sqlite
             echo '✅ Restored 9router data.sqlite from repo backup'
           else
             echo '⚠️ 9router/data.sqlite not found in repo — starting fresh'
           fi
-          # Start 9router hidden in the background (tray mode) on the default port 20128.
+
           nohup 9router --tray --skip-update -p 20128 > /tmp/9router.log 2>&1 &
+
           sleep 6
+
           if curl -fsS http://localhost:20128 > /dev/null 2>&1; then
             echo '✅ 9router is live on http://localhost:20128'
           else
             echo '⚠️ 9router did not come up — check /tmp/9router.log'
           fi
 
+      # ============================================================
+      # 9. Hermes
+      # ============================================================
       - name: 9. Install Hermes Agent & restore config + start Telegram gateway
         env:
           HERMES_API_KEY: ${{ secrets.HERMES_CUSTOM_API_KEY }}
           GH_TOKEN: ${{ secrets.MY_PAT }}
           TELEGRAM_ALLOWED_USERS: ${{ secrets.TELEGRAM_ALLOWED_USERS }}
           TELEGRAM_BOT_TOKEN: ${{ secrets[format('TELEGRAM_BOT_TOKEN_{0}', env.WF_NAME)] }}
-        run: |
-          echo "✅ Using Telegram bot: $WF_NAME (token: TELEGRAM_BOT_TOKEN_${WF_NAME})"
 
-          # 1. Install Hermes Agent
+        run: |
+          echo "✅ Using Telegram bot: $WF_NAME"
+
+          # ----------------------------------------------------------
+          # Install Hermes
+          # ----------------------------------------------------------
           curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash
+
           echo '✅ Hermes Agent installed'
+
           export PATH="$HOME/.hermes/bin:$PATH"
 
-          # 2. Restore the Hermes config, memories, and skills from repo
+          # ----------------------------------------------------------
+          # Restore Hermes directories
+          # ----------------------------------------------------------
           mkdir -p ~/.hermes
           mkdir -p ~/.hermes/memories
           mkdir -p ~/.hermes/skills
+
+          # ----------------------------------------------------------
+          # Restore config
+          # ----------------------------------------------------------
           if [ -f "${GITHUB_WORKSPACE:-.}/hermes/config.yaml" ]; then
             cp "${GITHUB_WORKSPACE:-.}/hermes/config.yaml" ~/.hermes/config.yaml
             echo '✅ Restored ~/.hermes/config.yaml'
           else
-            echo '⚠️ hermes/config.yaml not found in repo — using default config'
-          fi
-          # Restore memories
-          if [ -d "${GITHUB_WORKSPACE:-.}/hermes/memories" ]; then
-            cp -r "${GITHUB_WORKSPACE:-.}/hermes/memories/"* ~/.hermes/memories/ 2>/dev/null || true
-            echo '✅ Restored ~/.hermes/memories from repo'
-          else
-            echo '⚠️ hermes/memories not found in repo'
-          fi
-          # Restore skills
-          if [ -d "${GITHUB_WORKSPACE:-.}/hermes/skills" ]; then
-            cp -r "${GITHUB_WORKSPACE:-.}/hermes/skills/"* ~/.hermes/skills/ 2>/dev/null || true
-            echo '✅ Restored ~/.hermes/skills from repo'
-          else
-            echo '⚠️ hermes/skills not found in repo'
-          fi
-          # Restore SOUL.md
-          if [ -f "${GITHUB_WORKSPACE:-.}/hermes/SOUL.md" ]; then
-            cp "${GITHUB_WORKSPACE:-.}/hermes/SOUL.md" ~/.hermes/SOUL.md
-            echo '✅ Restored ~/.hermes/SOUL.md from repo'
-          else
-            echo '⚠️ hermes/SOUL.md not found in repo'
+            echo '⚠️ hermes/config.yaml not found'
           fi
 
-          # 3. Write the .env with secrets pulled from GitHub Secrets.
+          # ----------------------------------------------------------
+          # Restore memories
+          # ----------------------------------------------------------
+          if [ -d "${GITHUB_WORKSPACE:-.}/hermes/memories" ]; then
+            cp -a "${GITHUB_WORKSPACE:-.}/hermes/memories/." ~/.hermes/memories/ 2>/dev/null || true
+            echo '✅ Restored ~/.hermes/memories'
+          else
+            echo '⚠️ hermes/memories not found'
+          fi
+
+          # ----------------------------------------------------------
+          # Restore skills
+          # ----------------------------------------------------------
+          if [ -d "${GITHUB_WORKSPACE:-.}/hermes/skills" ]; then
+            cp -a "${GITHUB_WORKSPACE:-.}/hermes/skills/." ~/.hermes/skills/ 2>/dev/null || true
+            echo '✅ Restored ~/.hermes/skills'
+          else
+            echo '⚠️ hermes/skills not found'
+          fi
+
+          # ----------------------------------------------------------
+          # Restore SOUL.md
+          # ----------------------------------------------------------
+          if [ -f "${GITHUB_WORKSPACE:-.}/hermes/SOUL.md" ]; then
+            cp "${GITHUB_WORKSPACE:-.}/hermes/SOUL.md" ~/.hermes/SOUL.md
+            echo '✅ Restored ~/.hermes/SOUL.md'
+          else
+            echo '⚠️ hermes/SOUL.md not found'
+          fi
+
+          # ----------------------------------------------------------
+          # Hermes .env
+          # ----------------------------------------------------------
           {
             echo "HERMES_CUSTOM_127_0_0_1_20128_API_KEY=${HERMES_API_KEY}"
             echo "TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}"
@@ -176,62 +258,384 @@ jobs:
             echo "TELEGRAM_HOME_CHANNEL=${TELEGRAM_ALLOWED_USERS}"
             echo "GITHUB_TOKEN=${GH_TOKEN}"
           } > ~/.hermes/.env
-          chmod 600 ~/.hermes/.env
-          echo '✅ Wrote ~/.hermes/.env from secrets'
 
-          # 4. Start the Hermes messaging gateway (Telegram) in the background.
+          chmod 600 ~/.hermes/.env
+
+          echo '✅ Wrote ~/.hermes/.env'
+
+          # ----------------------------------------------------------
+          # Start Hermes
+          # ----------------------------------------------------------
           nohup hermes gateway run --replace > /tmp/hermes-gateway.log 2>&1 &
+
           sleep 6
+
           if curl -fsS http://127.0.0.1:20128 > /dev/null 2>&1; then
             echo '✅ 9router still live; Hermes gateway launching…'
           fi
-          echo '✅ Hermes gateway launch attempted (logs: /tmp/hermes-gateway.log)'
 
+          echo '✅ Hermes gateway launch attempted'
 
+          # ==========================================================
+          # START BACKGROUND GITHUB SYNC
+          # ==========================================================
 
+          SYNC_SCRIPT="/tmp/hermes-github-sync.sh"
+
+          cat > "$SYNC_SCRIPT" <<'SYNC_SCRIPT_EOF'
+          #!/usr/bin/env bash
+
+          set +e
+
+          REPO_DIR="${GITHUB_WORKSPACE:-.}"
+
+          cd "$REPO_DIR" || exit 1
+
+          echo "[$(date '+%Y-%m-%d %H:%M:%S')] Background Hermes GitHub sync started"
+
+          while true; do
+
+            # Wait 30 minutes before next sync
+            sleep 1800
+
+            echo ""
+            echo "=================================================="
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] Hermes periodic sync"
+            echo "=================================================="
+
+            cd "$REPO_DIR" || continue
+
+            # --------------------------------------------------------
+            # Copy Hermes state back to repository
+            # --------------------------------------------------------
+
+            mkdir -p hermes/memories
+            mkdir -p hermes/skills
+
+            if [ -d ~/.hermes/memories ]; then
+              cp -a ~/.hermes/memories/. hermes/memories/ 2>/dev/null || true
+              echo "✅ Memories copied"
+            fi
+
+            if [ -d ~/.hermes/skills ]; then
+              cp -a ~/.hermes/skills/. hermes/skills/ 2>/dev/null || true
+              echo "✅ Skills copied"
+            fi
+
+            if [ -f ~/.hermes/SOUL.md ]; then
+              cp ~/.hermes/SOUL.md hermes/SOUL.md
+              echo "✅ SOUL.md copied"
+            fi
+
+            # --------------------------------------------------------
+            # IMPORTANT:
+            # Stage FIRST, then check staged diff.
+            #
+            # This catches:
+            #   - modified files
+            #   - new files
+            #   - deleted files
+            # --------------------------------------------------------
+
+            git add -A hermes/memories/ hermes/skills/ hermes/SOUL.md
+
+            echo "===== Git status ====="
+            git status --short
+
+            # --------------------------------------------------------
+            # Check staged changes
+            # --------------------------------------------------------
+
+            if git diff --cached --quiet; then
+              echo "ℹ️ No Hermes changes to commit"
+              continue
+            fi
+
+            echo "===== Changes detected ====="
+            git diff --cached --stat
+
+            # --------------------------------------------------------
+            # Configure git
+            # --------------------------------------------------------
+
+            git config user.name "Shabakebehdasht"
+            git config user.email "Shabakebehdasht@users.noreply.github.com"
+
+            # --------------------------------------------------------
+            # Commit
+            # --------------------------------------------------------
+
+            git commit \
+              -m "Sync Hermes state from ${WF_NAME}" \
+              || {
+                echo "⚠️ Commit failed"
+                continue
+              }
+
+            # --------------------------------------------------------
+            # Sync with remote before push
+            # --------------------------------------------------------
+
+            CURRENT_BRANCH=$(git branch --show-current)
+
+            echo "Current branch: $CURRENT_BRANCH"
+
+            git fetch origin "$CURRENT_BRANCH" || true
+
+            git rebase "origin/$CURRENT_BRANCH" || {
+              echo "⚠️ Rebase failed — aborting rebase"
+
+              git rebase --abort 2>/dev/null || true
+
+              echo "⚠️ Push skipped for this cycle"
+
+              continue
+            }
+
+            # --------------------------------------------------------
+            # Push
+            # --------------------------------------------------------
+
+            git push origin "$CURRENT_BRANCH" || {
+              echo "⚠️ Push failed"
+              continue
+            }
+
+            echo "✅ Hermes state successfully pushed to GitHub"
+
+          done
+          SYNC_SCRIPT_EOF
+
+          chmod +x "$SYNC_SCRIPT"
+
+          # Run sync process in background
+          nohup "$SYNC_SCRIPT" > /tmp/hermes-github-sync.log 2>&1 &
+
+          SYNC_PID=$!
+
+          echo "$SYNC_PID" > /tmp/hermes-github-sync.pid
+
+          echo "✅ Background GitHub sync started"
+          echo "   PID: $SYNC_PID"
+          echo "   Interval: 30 minutes"
+
+      # ============================================================
+      # 10. Keep runner alive
+      # ============================================================
       - name: 10. Server Keep-Alive (5h 55m)
         run: |
           for i in {1..355}; do
             sleep 60
+
             echo "[$i/355] Server is active (SSH + 9router on port 20128)..."
+
+            # Every 10 minutes show latest sync log
+            if [ $((i % 10)) -eq 0 ]; then
+              echo ""
+              echo "===== Hermes GitHub Sync Log ====="
+
+              tail -30 /tmp/hermes-github-sync.log 2>/dev/null || true
+
+              echo "=================================="
+            fi
           done
 
-      - name: 11. Sync Hermes memories & skills back to GitHub
+      # ============================================================
+      # 11. FINAL Hermes Sync
+      # ============================================================
+      - name: 11. Final Sync Hermes memories & skills back to GitHub
         if: always()
         env:
           GH_TOKEN: ${{ secrets.MY_PAT }}
+
         run: |
+          echo "=================================================="
+          echo "FINAL HERMES GITHUB SYNC"
+          echo "=================================================="
+
+          # ----------------------------------------------------------
+          # Stop background sync process
+          # ----------------------------------------------------------
+
+          if [ -f /tmp/hermes-github-sync.pid ]; then
+            SYNC_PID=$(cat /tmp/hermes-github-sync.pid)
+
+            echo "Stopping background sync PID: $SYNC_PID"
+
+            kill "$SYNC_PID" 2>/dev/null || true
+          fi
+
+          # ----------------------------------------------------------
+          # Go to repository
+          # ----------------------------------------------------------
+
           cd "${GITHUB_WORKSPACE:-.}"
-          # Configure git for committing
-          git config user.name "Shabakebehdasht"
-          git config user.email "Shabakebehdasht@users.noreply.github.com"
-          # Authenticate with PAT for push
-          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/Shabakebehdasht/my-tail.git"
-          # Copy updated memories, skills, and SOUL.md from ~/.hermes back to repo
+
+          # ----------------------------------------------------------
+          # Git configuration
+          # ----------------------------------------------------------
+
+          git config user.name "Shabakebehd"
+          git config user.email "Shabakebehd@users.noreply.github.com"
+
+          # ----------------------------------------------------------
+          # Configure authenticated remote
+          # ----------------------------------------------------------
+
+          git remote set-url origin \
+            "https://x-access-token:${GH_TOKEN}@github.com/Shabakebehdasht/my-tail.git"
+
+          # ----------------------------------------------------------
+          # Make sure target directories exist
+          # ----------------------------------------------------------
+
+          mkdir -p hermes/memories
+          mkdir -p hermes/skills
+
+          # ----------------------------------------------------------
+          # Copy Hermes memories
+          # ----------------------------------------------------------
+
           if [ -d ~/.hermes/memories ]; then
-            cp -r ~/.hermes/memories/* hermes/memories/ 2>/dev/null || true
+            cp -a ~/.hermes/memories/. hermes/memories/ 2>/dev/null || true
             echo '✅ Copied memories to repo'
           fi
+
+          # ----------------------------------------------------------
+          # Copy Hermes skills
+          # ----------------------------------------------------------
+
           if [ -d ~/.hermes/skills ]; then
-            cp -r ~/.hermes/skills/* hermes/skills/ 2>/dev/null || true
+            cp -a ~/.hermes/skills/. hermes/skills/ 2>/dev/null || true
             echo '✅ Copied skills to repo'
           fi
+
+          # ----------------------------------------------------------
+          # Copy SOUL
+          # ----------------------------------------------------------
+
           if [ -f ~/.hermes/SOUL.md ]; then
             cp ~/.hermes/SOUL.md hermes/SOUL.md
             echo '✅ Copied SOUL.md to repo'
           fi
-          # Check if there are changes to commit
-          if git diff --quiet && git diff --cached --quiet; then
-            echo 'ℹ️ No changes to commit'
+
+          # ==========================================================
+          # IMPORTANT:
+          # DO NOT use git diff BEFORE git add.
+          #
+          # git add -A detects:
+          #   modified
+          #   new
+          #   deleted
+          # ==========================================================
+
+          echo ""
+          echo "===== Staging Hermes files ====="
+
+          git add -A \
+            hermes/memories/ \
+            hermes/skills/ \
+            hermes/SOUL.md
+
+          echo ""
+          echo "===== Git Status ====="
+
+          git status --short
+
+          # ----------------------------------------------------------
+          # Check staged changes
+          # ----------------------------------------------------------
+
+          if git diff --cached --quiet; then
+
+            echo ""
+            echo "ℹ️ No changes to commit"
+
           else
-            git add hermes/memories/ hermes/skills/ hermes/SOUL.md
-            git commit -m "Sync Hermes memories, skills & SOUL.md from sadaf instance"
-            git push origin "${{ github.ref_name }}" || echo '⚠️ Push failed — changes saved locally'
-            echo '✅ Hermes memories & skills synced to GitHub'
+
+            echo ""
+            echo "===== Changes detected ====="
+
+            git diff --cached --stat
+
+            echo ""
+            echo "===== Committing ====="
+
+            git commit \
+              -m "Sync Hermes memories, skills & SOUL.md from ${WF_NAME}"
+
+            # --------------------------------------------------------
+            # Determine current branch
+            # --------------------------------------------------------
+
+            CURRENT_BRANCH=$(git branch --show-current)
+
+            echo "Current branch: $CURRENT_BRANCH"
+
+            # --------------------------------------------------------
+            # Get latest remote changes
+            # --------------------------------------------------------
+
+            git fetch origin "$CURRENT_BRANCH" || true
+
+            # --------------------------------------------------------
+            # Rebase local commit(s) onto remote
+            # --------------------------------------------------------
+
+            if ! git rebase "origin/$CURRENT_BRANCH"; then
+
+              echo "⚠️ Rebase failed"
+
+              git rebase --abort 2>/dev/null || true
+
+              echo "⚠️ Push skipped"
+
+            else
+
+              # ------------------------------------------------------
+              # Push
+              # ------------------------------------------------------
+
+              if git push origin "$CURRENT_BRANCH"; then
+                echo ""
+                echo "=============================================="
+                echo "✅ Hermes data successfully synced to GitHub"
+                echo "=============================================="
+              else
+                echo ""
+                echo "⚠️ Push failed"
+                echo "Changes remain committed locally"
+              fi
+
+            fi
+
           fi
 
+          # ----------------------------------------------------------
+          # Show final status
+          # ----------------------------------------------------------
+
+          echo ""
+          echo "===== FINAL GIT STATUS ====="
+
+          git status --short
+
+          echo ""
+          echo "===== LAST COMMITS ====="
+
+          git log -5 --oneline
+
+          echo ""
+          echo "===== BACKGROUND SYNC LOG ====="
+
+          cat /tmp/hermes-github-sync.log 2>/dev/null || true
+
+      # ============================================================
+      # 12. Tailscale Logout
+      # ============================================================
       - name: 12. Tailscale Logout (cleanup on shutdown)
         if: always()
         run: |
           sudo tailscale logout || true
+
           echo "✅ Tailscale logout executed — hostname freed"
