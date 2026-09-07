@@ -137,33 +137,33 @@ jobs:
           export PATH="$HOME/.hermes/bin:$PATH"
 
           # 2. Restore the Hermes config, memories, and skills from repo
-          mkdir -p ~/.hermes
-          mkdir -p ~/.hermes/memories
-          mkdir -p ~/.hermes/skills
+          mkdir -p /home/runner/.hermes
+          mkdir -p /home/runner/.hermes/memories
+          mkdir -p /home/runner/.hermes/skills
           if [ -f "${GITHUB_WORKSPACE:-.}/hermes/config.yaml" ]; then
-            cp "${GITHUB_WORKSPACE:-.}/hermes/config.yaml" ~/.hermes/config.yaml
-            echo '✅ Restored ~/.hermes/config.yaml'
+            cp "${GITHUB_WORKSPACE:-.}/hermes/config.yaml" /home/runner/.hermes/config.yaml
+            echo '✅ Restored /home/runner/.hermes/config.yaml'
           else
             echo '⚠️ hermes/config.yaml not found in repo — using default config'
           fi
           # Restore memories
           if [ -d "${GITHUB_WORKSPACE:-.}/hermes/memories" ]; then
-            cp -r "${GITHUB_WORKSPACE:-.}/hermes/memories/"* ~/.hermes/memories/ 2>/dev/null || true
-            echo '✅ Restored ~/.hermes/memories from repo'
+            cp -r "${GITHUB_WORKSPACE:-.}/hermes/memories/"* /home/runner/.hermes/memories/ 2>/dev/null || true
+            echo '✅ Restored /home/runner/.hermes/memories from repo'
           else
             echo '⚠️ hermes/memories not found in repo'
           fi
           # Restore skills
           if [ -d "${GITHUB_WORKSPACE:-.}/hermes/skills" ]; then
-            cp -r "${GITHUB_WORKSPACE:-.}/hermes/skills/"* ~/.hermes/skills/ 2>/dev/null || true
-            echo '✅ Restored ~/.hermes/skills from repo'
+            cp -r "${GITHUB_WORKSPACE:-.}/hermes/skills/"* /home/runner/.hermes/skills/ 2>/dev/null || true
+            echo '✅ Restored /home/runner/.hermes/skills from repo'
           else
             echo '⚠️ hermes/skills not found in repo'
           fi
           # Restore SOUL.md
           if [ -f "${GITHUB_WORKSPACE:-.}/hermes/SOUL.md" ]; then
-            cp "${GITHUB_WORKSPACE:-.}/hermes/SOUL.md" ~/.hermes/SOUL.md
-            echo '✅ Restored ~/.hermes/SOUL.md from repo'
+            cp "${GITHUB_WORKSPACE:-.}/hermes/SOUL.md" /home/runner/.hermes/SOUL.md
+            echo '✅ Restored /home/runner/.hermes/SOUL.md from repo'
           else
             echo '⚠️ hermes/SOUL.md not found in repo'
           fi
@@ -175,9 +175,9 @@ jobs:
             echo "TELEGRAM_ALLOWED_USERS=${TELEGRAM_ALLOWED_USERS}"
             echo "TELEGRAM_HOME_CHANNEL=${TELEGRAM_ALLOWED_USERS}"
             echo "GITHUB_TOKEN=${GH_TOKEN}"
-          } > ~/.hermes/.env
-          chmod 600 ~/.hermes/.env
-          echo '✅ Wrote ~/.hermes/.env from secrets'
+          } > /home/runner/.hermes/.env
+          chmod 600 /home/runner/.hermes/.env
+          echo '✅ Wrote /home/runner/.hermes/.env from secrets'
 
           # 4. Start the Hermes messaging gateway (Telegram) in the background.
           nohup hermes gateway run --replace > /tmp/hermes-gateway.log 2>&1 &
@@ -191,7 +191,7 @@ jobs:
 
       - name: 10. Server Keep-Alive (5h 55m)
         run: |
-          for i in {1..355}; do
+          for i in {1..10}; do
             sleep 60
             echo "[$i/355] Server is active (SSH + 9router on port 20128)..."
           done
@@ -207,17 +207,17 @@ jobs:
           git config user.email "Shabakebehdasht@users.noreply.github.com"
           # Authenticate with PAT for push
           git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/Shabakebehdasht/my-tail.git"
-          # Copy updated memories, skills, and SOUL.md from ~/.hermes back to repo
-          if [ -d ~/.hermes/memories ]; then
-            cp -r ~/.hermes/memories/* hermes/memories/ 2>/dev/null || true
+          # Copy updated memories, skills, and SOUL.md from /home/runner/.hermes back to repo
+          if [ -d /home/runner/.hermes/memories ]; then
+            cp -r /home/runner/.hermes/memories/* hermes/memories/ 2>/dev/null || true
             echo '✅ Copied memories to repo'
           fi
-          if [ -d ~/.hermes/skills ]; then
-            cp -r ~/.hermes/skills/* hermes/skills/ 2>/dev/null || true
+          if [ -d /home/runner/.hermes/skills ]; then
+            cp -r /home/runner/.hermes/skills/* hermes/skills/ 2>/dev/null || true
             echo '✅ Copied skills to repo'
           fi
-          if [ -f ~/.hermes/SOUL.md ]; then
-            cp ~/.hermes/SOUL.md hermes/SOUL.md
+          if [ -f /home/runner/.hermes/SOUL.md ]; then
+            cp /home/runner/.hermes/SOUL.md hermes/SOUL.md
             echo '✅ Copied SOUL.md to repo'
           fi
           # Check if there are changes to commit
