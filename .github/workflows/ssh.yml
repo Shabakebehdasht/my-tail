@@ -136,37 +136,10 @@ jobs:
           echo '✅ Hermes Agent installed'
           export PATH="$HOME/.hermes/bin:$PATH"
 
-          # 2. Restore the Hermes config, memories, and skills from repo
+          # 2. Restore the full Hermes config, memories, and skills from repo
           mkdir -p /home/runner/.hermes
-          mkdir -p /home/runner/.hermes/memories
-          mkdir -p /home/runner/.hermes/skills
-          if [ -f "${GITHUB_WORKSPACE:-.}/hermes/config.yaml" ]; then
-            cp "${GITHUB_WORKSPACE:-.}/hermes/config.yaml" /home/runner/.hermes/config.yaml
-            echo '✅ Restored /home/runner/.hermes/config.yaml'
-          else
-            echo '⚠️ hermes/config.yaml not found in repo — using default config'
-          fi
-          # Restore memories
-          if [ -d "${GITHUB_WORKSPACE:-.}/hermes/memories" ]; then
-            cp -r "${GITHUB_WORKSPACE:-.}/hermes/memories/"* /home/runner/.hermes/memories/ 2>/dev/null || true
-            echo '✅ Restored /home/runner/.hermes/memories from repo'
-          else
-            echo '⚠️ hermes/memories not found in repo'
-          fi
-          # Restore skills
-          if [ -d "${GITHUB_WORKSPACE:-.}/hermes/skills" ]; then
-            cp -r "${GITHUB_WORKSPACE:-.}/hermes/skills/"* /home/runner/.hermes/skills/ 2>/dev/null || true
-            echo '✅ Restored /home/runner/.hermes/skills from repo'
-          else
-            echo '⚠️ hermes/skills not found in repo'
-          fi
-          # Restore SOUL.md
-          if [ -f "${GITHUB_WORKSPACE:-.}/hermes/SOUL.md" ]; then
-            cp "${GITHUB_WORKSPACE:-.}/hermes/SOUL.md" /home/runner/.hermes/SOUL.md
-            echo '✅ Restored /home/runner/.hermes/SOUL.md from repo'
-          else
-            echo '⚠️ hermes/SOUL.md not found in repo'
-          fi
+          cp -r "${GITHUB_WORKSPACE:-.}/hermes/"* /home/runner/.hermes/ 2>/dev/null || true
+          echo '✅ Restored /home/runner/.hermes from repo (hermes/ → ~/.hermes/)'
 
           # 3. Write the .env with secrets pulled from GitHub Secrets.
           {
@@ -207,19 +180,9 @@ jobs:
           git config user.email "Shabakebehdasht@users.noreply.github.com"
           # Authenticate with PAT for push
           git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/Shabakebehdasht/my-tail.git"
-          # Copy updated memories, skills, and SOUL.md from /home/runner/.hermes back to repo
-          if [ -d /home/runner/.hermes/memories ]; then
-            cp -r /home/runner/.hermes/memories/* hermes/memories/ 2>/dev/null || true
-            echo '✅ Copied memories to repo'
-          fi
-          if [ -d /home/runner/.hermes/skills ]; then
-            cp -r /home/runner/.hermes/skills/* hermes/skills/ 2>/dev/null || true
-            echo '✅ Copied skills to repo'
-          fi
-          if [ -f /home/runner/.hermes/SOUL.md ]; then
-            cp /home/runner/.hermes/SOUL.md hermes/SOUL.md
-            echo '✅ Copied SOUL.md to repo'
-          fi
+          # Copy everything from .hermes back to repo (backup)
+          cp -r /home/runner/.hermes/* hermes/ 2>/dev/null || true
+          echo '✅ Copied .hermes → hermes/ for backup'
           # Check if there are changes to commit
           if git diff --quiet && git diff --cached --quiet; then
             echo 'ℹ️ No changes to commit'
