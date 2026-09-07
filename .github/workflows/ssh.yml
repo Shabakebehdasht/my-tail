@@ -112,17 +112,24 @@ jobs:
             exit 1
           fi
 
-      - name: 8. Inject Secrets into .env (BEFORE composer — env parsed during postAutoloadDump)
+      - name: 8. Inject Secrets into .env
+        env:
+          DB_PASS: ${{ secrets.DB_PASSWORD }}
+          SUPA_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPA_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+          REDIS_H: ${{ secrets.REDIS_HOST }}
+          REDIS_P: ${{ secrets.REDIS_PASSWORD }}
+          REDIS_U: ${{ secrets.REDIS_URL }}
         run: |
           cd /home/runner/h-dashboard
-          sed -i "s|\${{ secrets.DB_PASSWORD }}|${{ secrets.DB_PASSWORD }}|g" .env
-          sed -i "s|\${{ secrets.SUPABASE_ACCESS_TOKEN }}|${{ secrets.SUPABASE_ACCESS_TOKEN }}|g" .env
-          sed -i "s|\${{ secrets.SUPABASE_PUBLISHABLE_KEY }}|${{ secrets.SUPABASE_PUBLISHABLE_KEY }}|g" .env
-          sed -i "s|\${{ secrets.REDIS_HOST }}|${{ secrets.REDIS_HOST }}|g" .env
-          sed -i "s|\${{ secrets.REDIS_PASSWORD }}|${{ secrets.REDIS_PASSWORD }}|g" .env
-          sed -i "s|\${{ secrets.REDIS_URL }}|${{ secrets.REDIS_URL }}|g" .env
-          echo "✅ Secrets injected into .env"
-          grep -E "^DB_PASSWORD=|^REDIS_" .env | sed 's/=.*/=***/' 
+          sed -i "s|^DB_PASSWORD=.*|DB_PASSWORD=$DB_PASS|" .env
+          sed -i "s|^SUPABASE_ACCESS_TOKEN=.*|SUPABASE_ACCESS_TOKEN=$SUPA_TOKEN|" .env
+          sed -i "s|^SUPABASE_PUBLISHABLE_KEY=.*|SUPABASE_PUBLISHABLE_KEY=$SUPA_KEY|" .env
+          sed -i "s|^REDIS_HOST=.*|REDIS_HOST=$REDIS_H|" .env
+          sed -i "s|^REDIS_PASSWORD=.*|REDIS_PASSWORD=$REDIS_P|" .env
+          sed -i "s|^REDIS_URL=.*|REDIS_URL=$REDIS_U|" .env
+          echo "✅ Secrets injected"
+          grep -E "^DB_PASSWORD=|^REDIS_" .env | sed 's/=.*/=***/'
 
       - name: 9. Composer & NPM install
         run: |
