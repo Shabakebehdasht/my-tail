@@ -189,11 +189,11 @@ jobs:
 
 
 
-      - name: 10. Server Keep-Alive (5h 55m)
+      - name: 10. Server Keep-Alive (5h 50m)
         run: |
-          for i in {1..10}; do
+          for i in {1..350}; do
             sleep 60
-            echo "[$i/355] Server is active (SSH + 9router on port 20128)..."
+            echo "[$i/350] Server is active (SSH + 9router on port 20128)..."
           done
 
       - name: 11. Sync Hermes memories & skills back to GitHub
