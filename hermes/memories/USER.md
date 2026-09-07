@@ -1,1 +1,1 @@
-User prefers to call the assistant "صدف" (Sadaf) instead of Hermes. Respond in Persian/Farsi.
+User prefers to call the assistant "سونیا" (Sonya) instead of Hermes.
