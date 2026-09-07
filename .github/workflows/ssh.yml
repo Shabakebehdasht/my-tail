@@ -100,11 +100,17 @@ jobs:
       - name: 7. Clone Project (from new repo and branch)
         run: |
           cd /home/runner
-          if [ ! -d h-dashboard ]; then
-            git clone -b beta "$REPO_ORIGIN"
-          fi
+          rm -rf h-dashboard
+          git clone -b beta "$REPO_ORIGIN"
           cd h-dashboard
-          cp .env-example-github .env
+          if [ -f .env-example-github ]; then
+            cp .env-example-github .env
+            echo "✅ Cloned and copied .env-example-github → .env"
+          else
+            echo "❌ .env-example-github not found in beta branch"
+            ls -la .env* 2>&1
+            exit 1
+          fi
 
       - name: 8. Inject Secrets into .env (replace ${{ secrets.XXX }} placeholders)
         run: |
@@ -120,9 +126,18 @@ jobs:
       - name: 9. Composer & NPM install
         run: |
           cd /home/runner/h-dashboard
-          composer update --no-interaction
-          npm update
-          echo "✅ Composer & NPM updated"
+          echo "📁 Contents of h-dashboard:"
+          ls -la
+          echo "---"
+          if [ ! -f "composer.json" ]; then
+            echo "❌ composer.json not found — is this the right directory?"
+            exit 1
+          fi
+          composer install --no-interaction --prefer-dist 2>&1
+          echo "✅ composer install done (exit: $?)"
+          npm install 2>&1
+          echo "✅ npm install done (exit: $?)"
+          ls -la vendor/autoload.php 2>&1 || echo "⚠️ vendor/autoload.php MISSING"
 
       - name: 10. Verify Database & Redis Connectivity
         run: |
