@@ -151,12 +151,11 @@ jobs:
           php artisan tinker --execute 'echo "Redis: " . (\Illuminate\Support\Facades\Redis::ping() ? "PONG" : "FAIL");'
           echo "✅ Cloud DB + Redis verified"
 
-      - name: 11. Optimize & Migrate
+      - name: 11. Optimize
         run: |
           cd /home/runner/h-dashboard
           php artisan optimize
-          php artisan migrate:fresh --seed --force
-          echo "✅ Database migrated and seeded"
+          echo "✅ Optimized"
 
       - name: 12. Build frontend assets
         run: |
