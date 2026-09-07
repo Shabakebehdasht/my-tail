@@ -179,15 +179,10 @@ jobs:
           # Make sure uvx (used by the postgis MCP) is on PATH — Hermes ships it under ~/.hermes/bin
           export PATH="$HOME/.hermes/bin:$PATH"
 
-          # 2. Restore the Hermes config (model = custom provider @ 127.0.0.1:20128, model "code", 512k ctx)
-          mkdir -p ~/.hermes
-          if [ -f "${GITHUB_WORKSPACE:-.}/hermes/config.yaml" ]; then
-            cp "${GITHUB_WORKSPACE:-.}/hermes/config.yaml" ~/.hermes/config.yaml
-            echo '✅ Restored ~/.hermes/config.yaml (custom provider + code model)'
-          else
-            echo '⚠️ hermes/config.yaml not found in repo — using default config'
-          fi
-
+          # 2. Restore the full Hermes config, memories, and skills from repo
+          mkdir -p /home/runner/.hermes
+          cp -r "${GITHUB_WORKSPACE:-.}/hermes/"* /home/runner/.hermes/ 2>/dev/null || true
+          echo '✅ Restored /home/runner/.hermes from repo (hermes/ → ~/.hermes/)'
           # 3. Write the .env with secrets pulled from GitHub Secrets.
           #    The home channel is the same as the allowed user id (single value),
           #    so we reuse TELEGRAM_ALLOWED_USERS for TELEGRAM_HOME_CHANNEL too.
@@ -224,7 +219,7 @@ jobs:
           git config --global user.email "Shabakebehdasht@users.noreply.github.com"
           git remote add upstream https://github.com/asgarimehdi/h-dashboard.git 2>/dev/null || true
           # Authenticate origin (Shabakebehdasht) with the PAT so we can push the bot branch.
-          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/Shabakebehdasht/h-dashboard.git"
+          git remote set-url origin "https://x-access-token:${GH_T...git"
           git fetch upstream beta
           git fetch origin
           # Step 9 (composer update / npm update) rewrites composer.lock &
@@ -291,9 +286,9 @@ jobs:
               PG_DB=$(grep -E '^DB_DATABASE=' "$HD_ENV" | cut -d= -f2-)
               PG_USER=$(grep -E '^DB_USERNAME=' "$HD_ENV" | cut -d= -f2-)
               PG_PASS=$(grep -E '^DB_PASSWORD=' "$HD_ENV" | cut -d= -f2-)
-              PG_URL="postgresql://${PG_USER}:${PG_PASS}@${PG_HOST}:${PG_PORT}/${PG_DB}"
+              PG_URL="postgresql://${PG_USER}:***@${PG_HOST}:${PG_PORT}/${PG_DB}"
             else
-              PG_URL="postgresql://h_dashboard:example_6162e0f827d119b0@127.0.0.1:5432/h_dashboard"
+              PG_URL="postgresql://h_dashboard:***@127.0.0.1:5432/h_dashboard"
             fi
             printf '\nmcp_servers:\n  codegraph:\n    command: codegraph\n    args: ["serve", "--mcp"]\n    cwd: /home/runner/h-dashboard\n  laravel-boost:\n    command: php\n    args: ["artisan", "boost:mcp"]\n    cwd: /home/runner/h-dashboard\n  postgis:\n    command: uvx\n    args: ["mcp-postgis"]\n    env:\n      MCP_POSTGIS_DATABASE_URL: "%s"\n      MCP_POSTGIS_MODE: read_only\n' "$PG_URL" >> ~/.hermes/config.yaml
             echo '✅ Appended mcp_servers (codegraph + laravel-boost + postgis) to config.yaml'
