@@ -16,6 +16,8 @@ jobs:
     steps:
       - name: 1. Checkout Repository
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: 2. Setup OpenSSH Server & Set Runner Password
         run: |
