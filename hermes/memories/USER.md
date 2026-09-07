@@ -1,0 +1,1 @@
+User prefers to call the assistant "سونیا" (Sonya) instead of Hermes.
