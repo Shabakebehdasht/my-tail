@@ -112,7 +112,7 @@ jobs:
             exit 1
           fi
 
-      - name: 8. Inject Secrets into .env (replace ${{ secrets.XXX }} placeholders)
+      - name: 8. Inject Secrets into .env (BEFORE composer — env parsed during postAutoloadDump)
         run: |
           cd /home/runner/h-dashboard
           sed -i "s|\${{ secrets.DB_PASSWORD }}|${{ secrets.DB_PASSWORD }}|g" .env
@@ -122,22 +122,18 @@ jobs:
           sed -i "s|\${{ secrets.REDIS_PASSWORD }}|${{ secrets.REDIS_PASSWORD }}|g" .env
           sed -i "s|\${{ secrets.REDIS_URL }}|${{ secrets.REDIS_URL }}|g" .env
           echo "✅ Secrets injected into .env"
+          grep -E "^DB_PASSWORD=|^REDIS_" .env | sed 's/=.*/=***/' 
 
       - name: 9. Composer & NPM install
         run: |
           cd /home/runner/h-dashboard
-          echo "📁 Contents of h-dashboard:"
-          ls -la
-          echo "---"
           if [ ! -f "composer.json" ]; then
-            echo "❌ composer.json not found — is this the right directory?"
+            echo "❌ composer.json not found"
             exit 1
           fi
           composer install --no-interaction --prefer-dist 2>&1
-          echo "✅ composer install done (exit: $?)"
           npm install 2>&1
-          echo "✅ npm install done (exit: $?)"
-          ls -la vendor/autoload.php 2>&1 || echo "⚠️ vendor/autoload.php MISSING"
+          echo "✅ Composer & NPM installed"
 
       - name: 10. Verify Database & Redis Connectivity
         run: |
