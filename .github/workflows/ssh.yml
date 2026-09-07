@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 360
     env:
-      WF_NAME: sadaf
+      WF_NAME: sonia
 
     steps:
       - name: 1. Checkout Repository
@@ -225,7 +225,7 @@ jobs:
             echo 'ℹ️ No changes to commit'
           else
             git add hermes/memories/ hermes/skills/ hermes/SOUL.md
-            git commit -m "Sync Hermes memories, skills & SOUL.md from sadaf instance"
+            git commit -m "Sync Hermes memories, skills & SOUL.md from sonia instance"
             git push origin "${{ github.ref_name }}" || echo '⚠️ Push failed — changes saved locally'
             echo '✅ Hermes memories & skills synced to GitHub'
           fi
