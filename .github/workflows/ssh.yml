@@ -219,7 +219,7 @@ jobs:
           git config --global user.email "Shabakebehdasht@users.noreply.github.com"
           git remote add upstream https://github.com/asgarimehdi/h-dashboard.git 2>/dev/null || true
           # Authenticate origin (Shabakebehdasht) with the PAT so we can push the bot branch.
-          git remote set-url origin "https://x-access-token:${GH_T...git"
+          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/Shabakebehdasht/h-dashboard.git"
           git fetch upstream beta
           git fetch origin
           # Step 9 (composer update / npm update) rewrites composer.lock &
