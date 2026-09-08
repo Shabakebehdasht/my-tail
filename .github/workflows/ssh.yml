@@ -1,8 +1,6 @@
 name: rebecca
 
 on:
-  schedule:
-    - cron: '0 */6 * * *'  # auto-start every 6 hours (24/7)
   workflow_dispatch:
 
 jobs:
