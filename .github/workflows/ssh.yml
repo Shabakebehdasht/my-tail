@@ -317,8 +317,8 @@ jobs:
       - name: 14. Start Laravel Development Server
         run: |
           cd /home/runner/h-dashboard
-          nohup php artisan serve --host=0.0.0.0 > /dev/null 2>&1 &
-          echo '✅ Laravel server started on port 8000'
+          nohup php artisan serve --host=0.0.0.0 --port=80 > /dev/null 2>&1 &
+          echo '✅ Laravel server started on port 80'
 
       - name: 15. Server Keep-Alive (5h 55m)
         run: |
