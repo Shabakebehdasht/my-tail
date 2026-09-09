@@ -380,6 +380,8 @@ jobs:
           else
             git add hermes/memories/ hermes/skills/ hermes/SOUL.md hermes/config.yaml 9router/ 2>/dev/null || true
             git commit -m "Sync hermes memories, skills & 9router data from rebecca instance"
+            # Pull first in case another run pushed before us
+            git pull --rebase origin "${{ github.ref_name }}" || true
             git push origin "${{ github.ref_name }}" || echo '⚠️ Push failed — changes saved locally'
             echo '✅ Hermes & 9router data synced to my-tail'
           fi
