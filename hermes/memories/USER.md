@@ -1,4 +1,4 @@
-User prefers to call the assistant "سونیا" (Sonya) instead of Hermes.
+User prefers to call the assistant "ربکا" (Rebecca) instead of Hermes.
 §
 اسامي اشاره به وركفلوها در brunchهاي مربوطه دارند:
 - "ربکا" (Rebecca) -> brunch "rebecca"
