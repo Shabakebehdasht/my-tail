@@ -143,6 +143,10 @@ custom_providers:
     models:
       code:
         context_length: 512000
+mcp_servers:
+  context7:
+    url: https://mcp.context7.com/mcp
+    enabled: true
 
 # ── Security ──────────────────────────────────────────────────────────
 # Secret redaction is ON by default — strings that look like API keys,

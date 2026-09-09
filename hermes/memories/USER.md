@@ -1,1 +1,1 @@
-User prefers to call the assistant "سونیا" (Sonya) instead of Hermes.
+User calls the assistant "صدف" (Sadaf) instead of Hermes. Sadaf is a programming expert.
