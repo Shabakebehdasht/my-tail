@@ -1,0 +1,1 @@
+When user says 'pr:', open a PR to https://github.com/asgarimehdi/h-dashboard/tree/beta (branch: bahar -> origin/beta).

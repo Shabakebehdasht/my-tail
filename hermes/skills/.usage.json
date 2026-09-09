@@ -5,14 +5,14 @@
     "created_by": null,
     "last_patched_at": null,
     "last_reused_patch_generation": 0,
-    "last_used_at": "2026-09-07T16:26:37.133688+00:00",
-    "last_viewed_at": "2026-09-07T16:26:37.132892+00:00",
+    "last_used_at": "2026-09-09T15:05:59.772576+00:00",
+    "last_viewed_at": "2026-09-09T15:05:59.720068+00:00",
     "patch_count": 0,
     "patch_generation": 0,
     "pinned": false,
     "state": "active",
-    "use_count": 1,
-    "view_count": 1
+    "use_count": 5,
+    "view_count": 5
   },
   "hermes-agent": {
     "archived_at": null,
@@ -20,14 +20,14 @@
     "created_by": null,
     "last_patched_at": null,
     "last_reused_patch_generation": 0,
-    "last_used_at": "2026-09-07T16:57:13.518442+00:00",
-    "last_viewed_at": "2026-09-07T16:57:13.516825+00:00",
+    "last_used_at": "2026-09-09T13:52:21.922104+00:00",
+    "last_viewed_at": "2026-09-09T13:52:21.893061+00:00",
     "patch_count": 0,
     "patch_generation": 0,
     "pinned": false,
     "state": "active",
-    "use_count": 3,
-    "view_count": 3
+    "use_count": 6,
+    "view_count": 6
   },
   "hermes-agent-skill-authoring": {
     "archived_at": null,
@@ -37,6 +37,21 @@
     "last_reused_patch_generation": 0,
     "last_used_at": "2026-09-07T16:49:26.316884+00:00",
     "last_viewed_at": "2026-09-07T16:49:26.313832+00:00",
+    "patch_count": 0,
+    "patch_generation": 0,
+    "pinned": false,
+    "state": "active",
+    "use_count": 1,
+    "view_count": 1
+  },
+  "improve": {
+    "archived_at": null,
+    "created_at": "2026-09-09T15:05:59.755948+00:00",
+    "created_by": null,
+    "last_patched_at": null,
+    "last_reused_patch_generation": 0,
+    "last_used_at": "2026-09-09T15:05:59.773813+00:00",
+    "last_viewed_at": "2026-09-09T15:05:59.755964+00:00",
     "patch_count": 0,
     "patch_generation": 0,
     "pinned": false,
@@ -58,5 +73,20 @@
     "state": "active",
     "use_count": 1,
     "view_count": 1
+  },
+  "shadcn-improve": {
+    "archived_at": null,
+    "created_at": "2026-09-09T13:55:49.172352+00:00",
+    "created_by": null,
+    "last_patched_at": "2026-09-09T13:57:32.845847+00:00",
+    "last_reused_patch_generation": 0,
+    "last_used_at": null,
+    "last_viewed_at": null,
+    "patch_count": 3,
+    "patch_generation": 3,
+    "pinned": false,
+    "state": "active",
+    "use_count": 0,
+    "view_count": 0
   }
 }
