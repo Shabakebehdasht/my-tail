@@ -312,13 +312,11 @@ jobs:
           fi
           echo '✅ Hermes gateway launch attempted (logs: /tmp/hermes-gateway.log)'
 
-          # 8. Seed instructions -> system prompt + real execution + welcome message.
+          # 8. Seed instructions -> system prompt + real execution + send result to Telegram.
           #    `hermes send` alone NEVER executes — it only relays text.
           #    So: (a) write seed into h-dashboard/.hermes.md (system prompt),
-          #    (b) run real `hermes chat -q` warmup to verify model+MCPs,
-          #    (c) send a proactive intro to Telegram via --file.
+          #    (b) run real `hermes chat -q` warmup, (c) send the RESULT to Telegram.
           SEED_FILE="${GITHUB_WORKSPACE:-.}/hermes/seed-message.txt"
-          WELCOME_FILE="${GITHUB_WORKSPACE:-.}/hermes/welcome-message.txt"
           HD_DIR=/home/runner/h-dashboard
           if [ -f "$SEED_FILE" ]; then
             sleep 3
@@ -329,15 +327,16 @@ jobs:
               cat "$SEED_FILE"
             } > "$HD_DIR/.hermes.md"
             echo '✅ Seed instructions written to h-dashboard/.hermes.md (system prompt)'
-            # 8b. Real agent execution (warmup: model + MCPs + tools).
-            (cd "$HD_DIR" && hermes chat -q "$(cat "$SEED_FILE") -- confirm each item is ready, one line per item" > /tmp/seed-warmup.log 2>&1) \
-              && echo '✅ Seed warmup executed via hermes chat' \
-              || echo '⚠️ Seed warmup failed (see /tmp/seed-warmup.log)'
-            # 8c. Proactive intro so you know everything is ready.
-            if [ -f "$WELCOME_FILE" ]; then
-              hermes send --to telegram --file "$WELCOME_FILE" \
-                && echo '✅ Welcome message sent to Telegram' \
-                || echo '⚠️ Welcome message failed to send'
+            # 8b. Real agent execution — capture output to send to Telegram.
+            SEED_RESULT=$(cd "$HD_DIR" && hermes chat -q "$(cat "$SEED_FILE")" 2>/tmp/seed-warmup.log) \
+              && echo '✅ Seed executed via hermes chat' \
+              || echo '⚠️ Seed execution failed (see /tmp/seed-warmup.log)'
+            # 8c. Send the execution result (not the raw seed) to Telegram.
+            if [ -n "$SEED_RESULT" ]; then
+              echo "$SEED_RESULT" > /tmp/seed-result.txt
+              hermes send --to telegram --file /tmp/seed-result.txt \
+                && echo '✅ Seed result sent to Telegram' \
+                || echo '⚠️ Seed result failed to send'
             else
               hermes send --to telegram "Rebecca online and ready." \
                 && echo '✅ Welcome message sent to Telegram' \
