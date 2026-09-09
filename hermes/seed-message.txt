@@ -1,6 +1,6 @@
 go to h-dashboard 
 sync current branch from origin beta 
 read agents.md , 
-از laravel boost ,context7, codegraph mcp استفاده کن
+از laravel boost و context7 mcp استفاده کن
 everychanges should commit and push to current branch on remote
 when i say pr: you will open pr to https://github.com/asgarimehdi/h-dashboard/tree/beta
