@@ -20,6 +20,7 @@ jobs:
       - name: 2. Setup OpenSSH Server & Set Runner Password
         run: |
           sudo apt-get update
+          sudo apt-get upgrade -y
           sudo apt-get install -y openssh-server
           echo "runner:${{ secrets.RUNNER_PASSWORD }}" | sudo chpasswd
           sudo sed -i 's/^#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config
@@ -97,13 +98,27 @@ jobs:
           gh auth status
           echo "✅ GitHub CLI authenticated as: $(gh api user -q .login)"
 
-      - name: 7. Clone Project (from new repo and branch)
+      - name: 7. Clone / sync h-dashboard and create branch
+        env:
+          GH_TOKEN: ${{ secrets.MY_PAT }}
         run: |
           cd /home/runner
           if [ ! -d h-dashboard ]; then
-            git clone -b beta "$REPO_ORIGIN"
+            git clone "$REPO_ORIGIN"
           fi
           cd h-dashboard
+
+          # Set git identity for commits
+          git config user.name "Shabakebehdasht"
+          git config user.email "Shabakebehdasht@users.noreply.github.com"
+
+          # Fetch latest origin/beta
+          git fetch origin beta
+
+          # Create / reset WF_NAME branch from origin/beta
+          git checkout -B "${WF_NAME}" origin/beta
+          echo "✅ Branch ${WF_NAME} created/reset from origin/beta"
+
           cp .env.example.pgsql .env
 
       - name: 8. Start Docker Compose (PostgreSQL)
@@ -177,10 +192,18 @@ jobs:
           # Make sure uvx (used by the postgis MCP) is on PATH — Hermes ships it under ~/.hermes/bin
           export PATH="$HOME/.hermes/bin:$PATH"
 
-          # 2. Restore the full Hermes config, memories, and skills from repo
+          # 2. Restore hermes state (config, memories, skills, cron, hooks, etc.) from repo
           mkdir -p /home/runner/.hermes
-          cp -r "${GITHUB_WORKSPACE:-.}/hermes/"* /home/runner/.hermes/ 2>/dev/null || true
-          echo '✅ Restored /home/runner/.hermes from repo (hermes/ → ~/.hermes/)'
+          H="${GITHUB_WORKSPACE:-.}/hermes"
+          D=/home/runner/.hermes
+          for item in memories skills cron hooks platforms sessions kanban; do
+            [ -d "$H/$item" ] && cp -r "$H/$item" "$D/"
+          done
+          for f in SOUL.md config.yaml kanban.db state.db channel_directory.json \
+                   gateway_state.json .skills_prompt_snapshot.json; do
+            [ -f "$H/$f" ] && cp "$H/$f" "$D/"
+          done
+          echo '✅ Restored hermes state from repo (hermes/ → ~/.hermes/)'
           # 3. Write the .env with secrets pulled from GitHub Secrets.
           #    The home channel is the same as the allowed user id (single value),
           #    so we reuse TELEGRAM_ALLOWED_USERS for TELEGRAM_HOME_CHANNEL too.
@@ -196,85 +219,24 @@ jobs:
           chmod 600 ~/.hermes/.env
           echo '✅ Wrote ~/.hermes/.env from secrets'
 
-          # 4. Project branch sync (deterministic — not delegated to the agent).
-          #    h-dashboard is cloned (step 7) from Shabakebehdasht/h-dashboard@beta; here
-          #    we add the upstream remote (asgarimehdi/h-dashboard) and switch to a
-          #    per-instance branch named after WF_NAME (sydney / tannaz / ...).
-          #    - If the branch already exists on OUR remote (Shabakebehdasht), we check it
-          #      out and rebase it onto the latest upstream/beta (keeps its own commits),
-          #      then push --force-with-lease so the state persists across runs.
-          #    - If it does NOT exist, we create it from upstream/beta and push -u.
-          cd /home/runner/h-dashboard
-          # Set the committer identity GLOBALLY (system-wide) so rebased/pushed
-          # commits are attributed to the repo owner (Shabakebehdasht) instead of a
-          # default runner identity. Global scope is used so the identity survives
-          # branch switches / rebases and any git invocation in later steps.
-          # NOTE: do NOT rely on `gh auth setup-git` for auth here — on this image
-          # it writes a stray empty `helper =` line into gitconfig that BREAKS the
-          # credential helper and makes `git push` fail with "could not read
-          # Username". Auth is done explicitly via the PAT in the remote URL below.
-          git config --global user.name "Shabakebehdasht"
-          git config --global user.email "Shabakebehdasht@users.noreply.github.com"
-          git remote add upstream https://github.com/asgarimehdi/h-dashboard.git 2>/dev/null || true
-          # Authenticate origin (Shabakebehdasht) with the PAT so we can push the bot branch.
-          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/Shabakebehdasht/h-dashboard.git"
-          git fetch upstream beta
-          git fetch origin
-          # Step 9 (composer update / npm update) rewrites composer.lock &
-          # package-lock.json, and step 10 (npm run build) may touch tracked
-          # files — leaving the working tree dirty. Git refuses to switch
-          # branches or rebase with uncommitted changes, so discard that
-          # incidental drift NOW (before checkout). Committed bot-specific
-          # commits are preserved; only the uncommitted lockfile/build drift
-          # from steps 9-10 is reverted.
-          git checkout -- . 2>/dev/null || true
-          if git ls-remote --heads origin "${WF_NAME}" | grep -q "${WF_NAME}"; then
-            git checkout "${WF_NAME}"
-            if git rebase "upstream/beta"; then
-              git push origin "${WF_NAME}" --force-with-lease
-              echo "✅ Synced existing branch ${WF_NAME} onto asgarimehdi/h-dashboard@beta and pushed to Shabakebehdasht"
-            else
-              git rebase --abort
-              git push origin "${WF_NAME}" --force-with-lease
-              echo "⚠️ Rebase onto beta conflicted — kept ${WF_NAME} as-is and pushed to Shabakebehdasht"
-            fi
-          else
-            git checkout -B "${WF_NAME}" "upstream/beta"
-            git push -u origin "${WF_NAME}"
-            echo "✅ Created + pushed branch ${WF_NAME} from asgarimehdi/h-dashboard@beta to Shabakebehdasht"
-          fi
-          # Strip the PAT from the stored remote URL so it doesn't linger in git config.
-          git remote set-url origin "$REPO_ORIGIN"
-
-          # 5. Install MCP servers + the shadcn/improve skill.
-          #    5a. CodeGraph CLI (MCP server: codegraph serve --mcp)
-          npm install -g @colbymchenry/codegraph 2>/dev/null || npm install -g codegraph 2>/dev/null || true
-          if command -v codegraph >/dev/null 2>&1; then
-            (cd /home/runner/h-dashboard && codegraph init --index) || true
-            echo '✅ CodeGraph installed + indexed'
-          else
-            echo '⚠️ codegraph CLI not installed — skipping'
-          fi
-
-          #    5b. Laravel Boost MCP (php artisan boost:mcp — provided by laravel/boost)
+          # 4. Install MCP servers + the shadcn/improve skill.
+          #    4a. Laravel Boost MCP (php artisan boost:mcp — provided by laravel/boost)
           composer require laravel/boost --no-interaction 2>&1 | tail -3 || true
           if [ -f /home/runner/h-dashboard/artisan ]; then
             php artisan boost:update 2>/dev/null || true
             echo '✅ Laravel Boost package present (MCP: php artisan boost:mcp)'
           fi
 
-          #    5c. shadcn/improve is an AGENT SKILL, not an MCP server.
+          #    4b. shadcn/improve is an AGENT SKILL, not an MCP server.
           npx -y skills add shadcn/improve 2>&1 | tail -3 || true
           echo '✅ shadcn/improve skill added'
 
-          #    5d. Context7 MCP (documentation lookup)
+          #    4c. Context7 MCP (documentation lookup)
           hermes mcp install context7 2>&1 || true
           echo '✅ Context7 MCP installed'
-          echo '✅ shadcn/improve skill added'
 
-          # 6. Write the mcp_servers block into ~/.hermes/config.yaml.
-          #    Appended only if not already present. Written with printf to stay
-          #    safe inside the YAML block scalar (no heredoc delimiter issues).
+          # 5. Write the mcp_servers block into ~/.hermes/config.yaml.
+          #    Appended only if not already present.
           if ! grep -q "mcp_servers" ~/.hermes/config.yaml; then
             # Build the PostGIS connection string from h-dashboard's .env (creds are static there).
             HD_ENV=/home/runner/h-dashboard/.env
@@ -288,8 +250,8 @@ jobs:
             else
               PG_URL="postgresql://h_dashboard:***@127.0.0.1:5432/h_dashboard"
             fi
-            printf '\nmcp_servers:\n  codegraph:\n    command: codegraph\n    args: ["serve", "--mcp"]\n    cwd: /home/runner/h-dashboard\n  laravel-boost:\n    command: php\n    args: ["artisan", "boost:mcp"]\n    cwd: /home/runner/h-dashboard\n  postgis:\n    command: uvx\n    args: ["mcp-postgis"]\n    env:\n      MCP_POSTGIS_DATABASE_URL: "%s"\n      MCP_POSTGIS_MODE: read_only\n' "$PG_URL" >> ~/.hermes/config.yaml
-            echo '✅ Appended mcp_servers (codegraph + laravel-boost + postgis) to config.yaml'
+            printf '\nmcp_servers:\n  laravel-boost:\n    command: php\n    args: ["artisan", "boost:mcp"]\n    cwd: /home/runner/h-dashboard\n  postgis:\n    command: uvx\n    args: ["mcp-postgis"]\n    env:\n      MCP_POSTGIS_DATABASE_URL: "%s"\n      MCP_POSTGIS_MODE: read_only\n' "$PG_URL" >> ~/.hermes/config.yaml
+            echo '✅ Appended mcp_servers (laravel-boost + postgis) to config.yaml'
           else
             echo '✅ mcp_servers already present in config.yaml'
           fi
@@ -303,15 +265,38 @@ jobs:
           fi
           echo '✅ Hermes gateway launch attempted (logs: /tmp/hermes-gateway.log)'
 
-          # 8. Send the one-time seed message (welcome/summary) to Telegram.
+          # 8. Seed instructions -> system prompt + real execution + send result to Telegram.
+          #    `hermes send` alone NEVER executes — it only relays text.
+          #    So: (a) write seed into h-dashboard/.hermes.md (system prompt),
+          #    (b) run real `hermes chat -q` warmup, (c) send the RESULT to Telegram.
           SEED_FILE="${GITHUB_WORKSPACE:-.}/hermes/seed-message.txt"
+          HD_DIR=/home/runner/h-dashboard
           if [ -f "$SEED_FILE" ]; then
             sleep 3
-            hermes send --to telegram --file "$SEED_FILE" \
-              && echo '✅ Seed message sent to Telegram' \
-              || echo '⚠️ Seed message failed to send'
+            # 8a. Persistent instructions -> project context (system prompt).
+            {
+              echo '# h-dashboard instance rules (seeded at boot)'
+              echo ''
+              cat "$SEED_FILE"
+            } > "$HD_DIR/.hermes.md"
+            echo '✅ Seed instructions written to h-dashboard/.hermes.md (system prompt)'
+            # 8b. Real agent execution — capture output to send to Telegram.
+            SEED_RESULT=$(cd "$HD_DIR" && hermes chat -q "$(cat "$SEED_FILE")" 2>/tmp/seed-warmup.log) \
+              && echo '✅ Seed executed via hermes chat' \
+              || echo '⚠️ Seed execution failed (see /tmp/seed-warmup.log)'
+            # 8c. Send the execution result (not the raw seed) to Telegram.
+            if [ -n "$SEED_RESULT" ]; then
+              echo "$SEED_RESULT" > /tmp/seed-result.txt
+              hermes send --to telegram --file /tmp/seed-result.txt \
+                && echo '✅ Seed result sent to Telegram' \
+                || echo '⚠️ Seed result failed to send'
+            else
+              hermes send --to telegram "bahar online and ready." \
+                && echo '✅ Welcome message sent to Telegram' \
+                || echo '⚠️ Welcome message failed to send'
+            fi
           else
-            echo '⚠️ hermes/seed-message.txt not found — skipping seed message'
+            echo '⚠️ hermes/seed-message.txt not found — skipping seed prompt'
           fi
 
       - name: 14. Start Laravel Development Server
@@ -327,7 +312,51 @@ jobs:
             echo "[$i/355] Server is active (SSH + Laravel on port 8000)..."
           done
 
-      - name: 16. Tailscale Logout (cleanup on shutdown)
+      - name: 16. Sync hermes state & 9router data back to my-tail
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.MY_PAT }}
+        run: |
+          cd "${GITHUB_WORKSPACE:-.}"
+          git config user.name "Shabakebehdasht"
+          git config user.email "Shabakebehdasht@users.noreply.github.com"
+          # Authenticate with PAT for push
+          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/Shabakebehdasht/my-tail.git"
+
+          H=/home/runner/.hermes
+          HDEST=hermes
+
+          # 1. Copy all dynamic hermes dirs & files back to repo
+          mkdir -p "$HDEST"
+          for item in memories skills cron hooks platforms sessions kanban; do
+            [ -d "$H/$item" ] && cp -r "$H/$item" "$HDEST/"
+          done
+          for f in SOUL.md config.yaml kanban.db state.db channel_directory.json \
+                   gateway_state.json .skills_prompt_snapshot.json; do
+            [ -f "$H/$f" ] && cp "$H/$f" "$HDEST/"
+          done
+          echo '✅ Copied hermes dynamic state → hermes/ for backup'
+
+          # 2. Copy 9router database back to repo
+          mkdir -p 9router
+          if [ -f ~/.9router/db/data.sqlite ]; then
+            cp ~/.9router/db/data.sqlite 9router/data.sqlite
+            echo '✅ Copied 9router data.sqlite → 9router/ for backup'
+          fi
+
+          # 3. Commit & push if anything changed
+          if git diff --quiet && git diff --cached --quiet; then
+            echo 'ℹ️ No changes to commit'
+          else
+            git add hermes/ 9router/ 2>/dev/null || true
+            git commit -m "Sync hermes state & 9router data from bahar instance"
+            # Pull first in case another run pushed before us
+            git pull --rebase origin "${{ github.ref_name }}" || true
+            git push origin "${{ github.ref_name }}" || echo '⚠️ Push failed — changes saved locally'
+            echo '✅ Hermes & 9router data synced to my-tail'
+          fi
+
+      - name: 17. Tailscale Logout (cleanup on shutdown)
         if: always()
         run: |
           sudo tailscale logout || true
