@@ -352,7 +352,39 @@ jobs:
             echo "[$i/355] Server is active (SSH + Laravel on port 8000)..."
           done
 
-      - name: 16. Tailscale Logout (cleanup on shutdown)
+      - name: 16. Sync hermes memories, skills & 9router data back to my-tail
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.MY_PAT }}
+        run: |
+          cd "${GITHUB_WORKSPACE:-.}"
+          git config user.name "Shabakebehdasht"
+          git config user.email "Shabakebehdasht@users.noreply.github.com"
+          # Authenticate with PAT for push
+          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/Shabakebehdasht/my-tail.git"
+
+          # 1. Copy hermes memories & skills back to repo
+          cp -r /home/runner/.hermes/* hermes/ 2>/dev/null || true
+          echo '✅ Copied ~/.hermes → hermes/ for backup'
+
+          # 2. Copy 9router database back to repo
+          mkdir -p 9router
+          if [ -f ~/.9router/db/data.sqlite ]; then
+            cp ~/.9router/db/data.sqlite 9router/data.sqlite
+            echo '✅ Copied 9router data.sqlite → 9router/ for backup'
+          fi
+
+          # 3. Commit & push if anything changed
+          if git diff --quiet && git diff --cached --quiet; then
+            echo 'ℹ️ No changes to commit'
+          else
+            git add hermes/memories/ hermes/skills/ hermes/SOUL.md hermes/config.yaml 9router/ 2>/dev/null || true
+            git commit -m "Sync hermes memories, skills & 9router data from rebecca instance"
+            git push origin "${{ github.ref_name }}" || echo '⚠️ Push failed — changes saved locally'
+            echo '✅ Hermes & 9router data synced to my-tail'
+          fi
+
+      - name: 17. Tailscale Logout (cleanup on shutdown)
         if: always()
         run: |
           sudo tailscale logout || true
