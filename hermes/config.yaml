@@ -1,34 +1,113 @@
-_config_version: 39
+model:
+  api_key: ${HERMES_CUSTOM_127_0_0_1_20128_API_KEY}
+  base_url: http://127.0.0.1:20128/v1
+  default: code
+  provider: custom
+database:
+  journal_mode: wal
+runtime:
+  nofile_soft_limit: 4096
 agent:
   max_turns: 500
   personalities: {}
   reasoning_effort: medium
   verbose: false
+terminal:
+  backend: local
+  cwd: .
+  timeout: 180
+  home_mode: auto
+  container_cpu: 1
+  container_memory: 5120
+  container_disk: 51200
+  container_persistent: true
+  docker_mount_cwd_to_workspace: false
+  lifetime_seconds: 300
 browser:
+  inactivity_timeout: 120
   extension_control:
     enabled: false
-  inactivity_timeout: 120
+tool_loop_guardrails:
+  warnings_enabled: true
+  hard_stop_enabled: false
+  warn_after:
+    exact_failure: 2
+    same_tool_failure: 3
+    idempotent_no_progress: 2
+  hard_stop_after:
+    exact_failure: 5
+    same_tool_failure: 8
+    idempotent_no_progress: 5
+compression:
+  enabled: true
+  checkpoint_required: false
+  progress_notices: false
+  threshold: 0.5
+  target_ratio: 0.2
+  protect_last_n: 20
+  min_tail_user_messages: 1
+  max_attempts: 3
+  proactive_prune_tokens: 0
+  proactive_prune_min_result_chars: 8000
+  proactive_prune_min_reclaim_tokens: 4096
+  protect_first_n: 3
+  codex_gpt55_autoraise: true
+  codex_app_server_auto: native
+  codex_responses_native: false
+  codex_responses_compact_threshold: 200000
+  idle_compact_after_seconds: 0
+prompt_caching:
+  cache_ttl: 5m
+display:
+  compact: false
+  busy_input_mode: interrupt
+  bell_on_complete: false
+  show_reasoning: false
+  background_process_notifications: concise
+  streaming: true
+  skin: default
+  interim_assistant_messages: true
+  busy_ack_detail: true
+  cleanup_progress: false
+  long_running_notifications: true
+  tool_progress: all
+stt:
+  enabled: true
+  language: en
+  local:
+    model: base
+  openai:
+    model: whisper-1
+    language: ''
+memory:
+  memory_enabled: true
+  user_profile_enabled: true
+  memory_char_limit: 2200
+  user_char_limit: 1375
+  nudge_interval: 10
+delegation:
+  max_iterations: 250
+skills:
+  creation_nudge_interval: 15
+kanban:
+  review_dispatch: true
 code_execution:
   max_tool_calls: 50
   timeout: 300
-compression:
-  checkpoint_required: false
-  codex_app_server_auto: native
-  codex_gpt55_autoraise: true
-  codex_responses_compact_threshold: 200000
-  codex_responses_native: false
-  enabled: true
-  idle_compact_after_seconds: 0
-  max_attempts: 3
-  min_tail_user_messages: 1
-  proactive_prune_min_reclaim_tokens: 4096
-  proactive_prune_min_result_chars: 8000
-  proactive_prune_tokens: 0
-  progress_notices: false
-  protect_first_n: 3
-  protect_last_n: 20
-  target_ratio: 0.2
-  threshold: 0.5
+streaming:
+  enabled: false
+onboarding:
+  seen:
+    profile_build_offered: true
+    tool_progress_prompt: true
+telemetry:
+  shared_metrics:
+    enabled: false
+updates:
+  pre_update_backup: false
+  backup_keep: 5
+  non_interactive_local_changes: stash
+_config_version: 39
 custom_providers:
 - base_url: http://127.0.0.1:20128/v1
   key_env: HERMES_CUSTOM_127_0_0_1_20128_API_KEY
@@ -37,38 +116,20 @@ custom_providers:
     code:
       context_length: 512000
   name: Local (127.0.0.1:20128)
-database:
-  journal_mode: wal
-delegation:
-  max_iterations: 250
-display:
-  background_process_notifications: concise
-  bell_on_complete: false
-  busy_ack_detail: true
-  busy_input_mode: interrupt
-  cleanup_progress: false
-  compact: false
-  interim_assistant_messages: true
-  long_running_notifications: true
-  show_reasoning: false
-  skin: default
-  streaming: true
-  tool_progress: all
 group_sessions_per_user: true
-kanban:
-  review_dispatch: true
 mcp_servers:
   codegraph:
     args:
     - -c
-    - cd /home/runner/h-dashboard && codegraph serve --mcp
+    - cd /home/runner/h-dashboard && /home/runner/.npm-global/bin/codegraph serve
+      --mcp
     command: sh
     connect_timeout: 60
     enabled: true
     timeout: 120
   context7:
-    enabled: true
     url: https://mcp.context7.com/mcp
+    enabled: true
   laravel_boost:
     args:
     - -c
@@ -76,25 +137,9 @@ mcp_servers:
     command: sh
     env:
       APP_ENV: local
-memory:
-  memory_char_limit: 2200
-  memory_enabled: true
-  nudge_interval: 10
-  user_char_limit: 1375
-  user_profile_enabled: true
-model:
-  api_key: ${HERMES_CUSTOM_127_0_0_1_20128_API_KEY}
-  base_url: http://127.0.0.1:20128/v1
-  default: code
-  provider: custom
-onboarding:
-  seen:
-    profile_build_offered: true
-    tool_progress_prompt: true
 platform_toolsets:
   cli:
   - hermes-cli
-  - mcp-codegraph
   discord:
   - hermes-discord
   google_chat:
@@ -111,57 +156,11 @@ platform_toolsets:
   - hermes-teams
   telegram:
   - hermes-telegram
-  - mcp-codegraph
   whatsapp:
   - hermes-whatsapp
   yuanbao:
   - hermes-yuanbao
-prompt_caching:
-  cache_ttl: 5m
-runtime:
-  nofile_soft_limit: 4096
 session_reset:
   at_hour: 4
   idle_minutes: 1440
   mode: none
-skills:
-  creation_nudge_interval: 15
-streaming:
-  enabled: false
-stt:
-  enabled: true
-  language: en
-  local:
-    model: base
-  openai:
-    language: ''
-    model: whisper-1
-telemetry:
-  shared_metrics:
-    enabled: false
-terminal:
-  backend: local
-  container_cpu: 1
-  container_disk: 51200
-  container_memory: 5120
-  container_persistent: true
-  cwd: .
-  docker_mount_cwd_to_workspace: false
-  home_mode: auto
-  lifetime_seconds: 300
-  timeout: 180
-tool_loop_guardrails:
-  hard_stop_after:
-    exact_failure: 5
-    idempotent_no_progress: 5
-    same_tool_failure: 8
-  hard_stop_enabled: false
-  warn_after:
-    exact_failure: 2
-    idempotent_no_progress: 2
-    same_tool_failure: 3
-  warnings_enabled: true
-updates:
-  backup_keep: 5
-  non_interactive_local_changes: stash
-  pre_update_backup: false
