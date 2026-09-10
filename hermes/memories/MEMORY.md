@@ -1,0 +1,7 @@
+h-dashboard project: /home/runner/h-dashboard. Laravel 13 + Livewire 4 + MaryUI + PostGIS. Branch: rebecca (synced with origin/beta). Remote: Shabakebehdasht/h-dashboard. PR target: asgarimehdi/h-dashboard/tree/beta. User workflow: every fix → commit+push to rebecca; when user says 'pr' → open PR to beta. MCP: Laravel Boost + Context7 + CodeGraph (needs codegraph sync). AGENTS.md is the project bible.
+§
+User name: M A (Telegram). Calls assistant 'ربکا' (Rebecca). Works on h-dashboard healthcare dashboard app. Tests in browser, reports UI bugs, expects immediate fixes with commit+push. Persian-speaking, RTL project.
+§
+PHPStan gotcha: after changing code with baseline-ignored errors, old patterns may no longer match and PHPStan treats unmatched entries as errors. Fix: run `phpstan analyse --generate-baseline` after code changes that alter error surfaces, then commit phpstan-baseline.neon alongside.
+§
+User prefers the assistant name 'ربکا' (Rebecca). Communicates in Persian/Farsi. Works on h-dashboard (Laravel 13 + Livewire 4 + MaryUI health dashboard, RTL Persian-language, PostGIS). Branch: rebecca synced with origin/beta. PR target: asgarimehdi/h-dashboard/tree/beta. MCP tools: Laravel Boost, Context7, CodeGraph. Prefers every change committed+pushed immediately.

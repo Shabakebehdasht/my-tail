@@ -2,287 +2,295 @@
   "version": 2,
   "manifest": {
     "media/DESCRIPTION.md": [
-      1788981349228806993,
+      1789052435120322485,
       139
     ],
     "media/gif-search/SKILL.md": [
-      1788981349228931576,
+      1789052435120399661,
       2720
     ],
     "media/songsee/SKILL.md": [
-      1788981349229019481,
+      1789052435120475586,
       2336
     ],
     "media/youtube-content/SKILL.md": [
-      1788981349229104951,
+      1789052435120574345,
       3538
     ],
     "note-taking/DESCRIPTION.md": [
-      1788981349229350040,
+      1789052435120804192,
       146
     ],
     "note-taking/obsidian/SKILL.md": [
-      1788981349229441321,
+      1789052435120879655,
       3092
     ],
     "productivity/DESCRIPTION.md": [
-      1788981349229534536,
+      1789052435120963081,
       114
     ],
     "productivity/airtable/SKILL.md": [
-      1788981349229604978,
+      1789052435121040568,
       11314
     ],
     "productivity/powerpoint/SKILL.md": [
-      1788981349234260120,
+      1789052435125285594,
       10781
     ],
     "productivity/document-to-action-items/SKILL.md": [
-      1788981349230531574,
+      1789052435121885543,
       3910
     ],
     "productivity/product-price-monitor/SKILL.md": [
-      1788981349234835448,
+      1789052435125900972,
       4400
     ],
     "productivity/google-workspace/SKILL.md": [
-      1788981349231567585,
+      1789052435122829097,
       13670
     ],
     "productivity/box/SKILL.md": [
-      1788981349229701268,
+      1789052435121127519,
       11697
     ],
     "productivity/xlsx/SKILL.md": [
-      1788981349235172589,
+      1789052435126201286,
       9655
     ],
     "productivity/docx/SKILL.md": [
-      1788981349230680162,
+      1789052435122017102,
       10395
     ],
     "productivity/weekly-review-planning/SKILL.md": [
-      1788981349235012119,
+      1789052435126063688,
       3975
     ],
     "productivity/meeting-action-items/SKILL.md": [
-      1788981349232368666,
+      1789052435123560401,
       3808
     ],
     "productivity/maps/SKILL.md": [
-      1788981349232172668,
+      1789052435123359828,
       6705
     ],
     "productivity/teams-meeting-pipeline/SKILL.md": [
-      1788981349234936898,
+      1789052435125983267,
       7206
     ],
     "productivity/notion/SKILL.md": [
-      1788981349232456380,
+      1789052435123654533,
       14629
     ],
     "productivity/pdf/SKILL.md": [
-      1788981349232707150,
+      1789052435123877719,
       12489
     ],
     "research/DESCRIPTION.md": [
-      1788981349235993718,
+      1789052435126948603,
       179
     ],
     "research/arxiv/SKILL.md": [
-      1788981349236083927,
+      1789052435127034934,
       10061
     ],
     "research/competitor-news-monitor/SKILL.md": [
-      1788981349236260788,
+      1789052435127200754,
       4619
     ],
     "research/rss-feeds/SKILL.md": [
-      1788981349236940331,
+      1789052435127791996,
       4557
     ],
     "research/llm-wiki/SKILL.md": [
-      1788981349236786263,
+      1789052435127686988,
       20121
     ],
     "research/grounded-citations/SKILL.md": [
-      1788981349236361336,
+      1789052435127284881,
       12652
     ],
     "social-media/DESCRIPTION.md": [
-      1788981349237124707,
+      1789052435127961402,
       151
     ],
     "social-media/xurl/SKILL.md": [
-      1788981349237401856,
+      1789052435128220232,
       16345
     ],
     "social-media/reddit-reading/SKILL.md": [
-      1788981349237221889,
+      1789052435128050206,
       6279
     ],
     "autonomous-ai-agents/DESCRIPTION.md": [
-      1788981349214264586,
+      1789052435106413146,
       211
     ],
     "autonomous-ai-agents/opencode/SKILL.md": [
-      1788981349216594261,
+      1789052435108601568,
       7259
     ],
     "autonomous-ai-agents/hermes-agent/SKILL.md": [
-      1788981349214819576,
+      1789052435106848162,
       13183
     ],
     "autonomous-ai-agents/claude-code/SKILL.md": [
-      1788981349214403436,
+      1789052435106534819,
       34281
     ],
     "autonomous-ai-agents/computer-use/SKILL.md": [
-      1788981349214673352,
+      1789052435106740179,
       15819
     ],
     "autonomous-ai-agents/codex/SKILL.md": [
-      1788981349214533169,
+      1789052435106651445,
       5738
     ],
     "email/DESCRIPTION.md": [
-      1788981349228375574,
+      1789052435119943222,
       101
     ],
     "email/email-inbox-triage/SKILL.md": [
-      1788981349228469811,
+      1789052435120019217,
       4057
     ],
     "email/himalaya/SKILL.md": [
-      1788981349228556904,
+      1789052435120097525,
       7272
     ],
     "apple/DESCRIPTION.md": [
-      1788981349213619838,
+      1789052435105973292,
       137
     ],
     "apple/imessage/SKILL.md": [
-      1788981349214137638,
+      1789052435106319895,
       2442
     ],
     "apple/apple-notes/SKILL.md": [
-      1788981349213717541,
+      1789052435106052101,
       2394
     ],
     "apple/findmy/SKILL.md": [
-      1788981349214034345,
+      1789052435106230039,
       3709
     ],
     "apple/apple-reminders/SKILL.md": [
-      1788981349213884374,
+      1789052435106142918,
       3606
     ],
     "software-development/simplify-code/SKILL.md": [
-      1788981349239990957,
+      1789052435130740946,
       14696
     ],
     "software-development/python-debugpy/SKILL.md": [
-      1788981349239724478,
+      1789052435130567975,
       13347
     ],
     "software-development/github/SKILL.md": [
-      1788981349237907493,
+      1789052435128746677,
       2446
     ],
     "software-development/systematic-debugging/SKILL.md": [
-      1788981349240177997,
+      1789052435130915129,
       14059
     ],
     "software-development/node-inspect-debugger/SKILL.md": [
-      1788981349239630612,
+      1789052435130452781,
       10894
     ],
     "software-development/codebase-inspection/SKILL.md": [
-      1788981349237511892,
+      1789052435128329137,
       3612
     ],
     "software-development/test-driven-development/SKILL.md": [
-      1788981349240272214,
+      1789052435131001179,
       10300
     ],
     "software-development/hermes-agent-skill-authoring/SKILL.md": [
-      1788981349239191329,
+      1789052435129945876,
       14432
     ],
     "software-development/spike/SKILL.md": [
-      1788981349240084993,
+      1789052435130836710,
       8723
     ],
     "software-development/inspecting-hermes-desktop-dom/SKILL.md": [
-      1788981349239548267,
+      1789052435130278668,
       6204
     ],
     "software-development/requesting-code-review/SKILL.md": [
-      1788981349239847458,
+      1789052435130662908,
       8423
     ],
     "software-development/dogfood/SKILL.md": [
-      1788981349237602953,
+      1789052435128412182,
       6324
     ],
+    "software-development/laravel/SKILL.md": [
+      1789056550511968538,
+      5575
+    ],
     "software-development/improve/SKILL.md": [
-      1788981349239312816,
+      1789052435130062282,
       3241
     ],
+    "software-development/livewire-debugging/SKILL.md": [
+      1789052435130381133,
+      5909
+    ],
     "web/DESCRIPTION.md": [
-      1788981349240365799,
+      1789052435131084685,
       137
     ],
     "web/blocked-page-recovery/SKILL.md": [
-      1788981349240442663,
+      1789052435131170494,
       5156
     ],
     "creative/DESCRIPTION.md": [
-      1788981349216691583,
+      1789052435108699115,
       116
     ],
     "creative/baoyu-infographic/SKILL.md": [
-      1788981349217987211,
+      1789052435109984034,
       10434
     ],
     "creative/design-md/SKILL.md": [
-      1788981349221069897,
+      1789052435112963510,
       8477
     ],
     "creative/architecture-diagram/SKILL.md": [
-      1788981349216782574,
+      1789052435108790613,
       5830
     ],
     "creative/humanizer/SKILL.md": [
-      1788981349221265002,
+      1789052435113188790,
       34463
     ],
     "creative/songwriting-and-ai-music/SKILL.md": [
-      1788981349228192411,
+      1789052435119761258,
       10963
     ],
     "creative/manim-video/SKILL.md": [
-      1788981349221399795,
+      1789052435113347770,
       12150
     ],
     "creative/popular-web-designs/SKILL.md": [
-      1788981349223543571,
+      1789052435115738938,
       9722
     ],
     "creative/p5js/SKILL.md": [
-      1788981349222448560,
+      1789052435114558236,
       27534
     ],
     "creative/claude-design/SKILL.md": [
-      1788981349220983194,
+      1789052435112874826,
       25117
     ],
     "creative/ascii-video/SKILL.md": [
-      1788981349217089058,
+      1789052435109063515,
       15011
     ],
     "devops/sdlc-review/SKILL.md": [
-      1788981349228292759,
+      1789052435119854619,
       9073
     ]
   },
@@ -625,7 +633,7 @@
       "skill_name": "sdlc-review",
       "category": "devops",
       "frontmatter_name": "sdlc-review",
-      "description": "Review Kanban handoffs and route verified outcomes.",
+      "description": "",
       "platforms": [
         "linux",
         "macos",
@@ -1226,6 +1234,42 @@
       "category": "software-development",
       "frontmatter_name": "inspecting-hermes-desktop-dom",
       "description": "Read the live Hermes desktop DOM/CSS over CDP.",
+      "platforms": [
+        "linux",
+        "macos",
+        "windows"
+      ],
+      "conditions": {
+        "fallback_for_toolsets": [],
+        "requires_toolsets": [],
+        "fallback_for_tools": [],
+        "requires_tools": [],
+        "session_platforms": []
+      }
+    },
+    {
+      "skill_name": "laravel",
+      "category": "software-development",
+      "frontmatter_name": "laravel",
+      "description": "Laravel pitfalls: PHPStan baseline, Pest tests, CI patterns.",
+      "platforms": [
+        "linux",
+        "macos",
+        "windows"
+      ],
+      "conditions": {
+        "fallback_for_toolsets": [],
+        "requires_toolsets": [],
+        "fallback_for_tools": [],
+        "requires_tools": [],
+        "session_platforms": []
+      }
+    },
+    {
+      "skill_name": "livewire-debugging",
+      "category": "software-development",
+      "frontmatter_name": "livewire-debugging",
+      "description": "Use when debugging Livewire performance or UI failures.",
       "platforms": [
         "linux",
         "macos",
