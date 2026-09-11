@@ -23,6 +23,7 @@ only know by looking at the running page.
    `evaluateAll()` of element attributes. Delete it after. This turns "guess the
    selector" into "read the selector off the rendered node". See
    `references/livewire-maryui-quirks.md` for the attribute shapes to expect.
+   For multi-role authorization coverage see `references/rbac-multi-role-login.md`.
 
 3. **Write locators from the probe output.** Prefer, in order: stable `#id`,
    `[wire\:model="..."]` attribute selectors, `getByRole('name', { name: '…' })`,
@@ -48,6 +49,27 @@ only know by looking at the running page.
   the test, or the next run starts with a broken login.
 - **`npm install` bumps patch versions in package-lock.json** (unrelated deps get
   `^`-range updates). That diff is real and harmless — commit it, don't fight it.
+- **Non-destructive testing is the default.** E2E suites share seeded data across runs,
+  so no test may alter it. For destructive features (bulk ops, settings toggles,
+  archive/clear tools, record CRUD) assert the trigger *exists and is guarded*, never
+  the mutation if it would persist. When a feature is genuinely broken (a route
+  500s, a CRUD view is missing), do NOT fake a pass — mark the test `test.fixme`
+  with a one-line comment naming the defect, so the blockage is visible, not hidden.
+- **Forbidden = HTTP 403, not a redirect.** Spatie/Livewire route-level authorization
+  answers unauthorized navigation with a 403 response; the user is not bounced to
+  `/login` or a permission page. Make the status code the RBAC signal
+  (`response.status()` after `page.goto`, or `page.request.get(url)`), not a URL
+  change or an error string — those don't change for a 403.
+- **Placeholder / UI hint text is not behavior.** A search box placeholder that says
+  "min 2 characters" does not mean 2 characters are enforced (the debounce may fire
+  on 1). Probe what actually happens — fill 1 char and observe — before asserting
+  the hint as a gate. The hint can be locally displayed even when the constraint
+  doesn't exist.
+- **Framework / viz libraries render their own DOM, not your assumptions.** Highcharts
+  emits `.highcharts-*` SVG, Leaflet markers are frequently custom `divIcon`s
+  (e.g. `.unit-marker`) rather than the stock `.leaflet-marker-icon`. Probe the live
+  container for the real classes (`locator('.leaflet-container')`, then `evaluateAll`
+  for actual marker/layer classes) before writing locators.
 - **Smoke-link loop: use `page.request.get`, not page navigation.** To verify "no
   broken links", collect hrefs once from the drawer (`evaluateAll` deduping + filtering
   `href.startsWith('/') && !href.startsWith('//')`), then issue each as
