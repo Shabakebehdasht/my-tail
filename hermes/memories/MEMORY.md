@@ -1,0 +1,3 @@
+h-dashboard branch rayhane tracks origin/beta. bahar branch has latest e2e work — sync rayhane from bahar when user says "go to h-dashboard". E2E tests: 153 passing, 6 fixme (destructive mutations). Plans/e2e/README.md is the source of truth for test status.
+§
+Cross-fork PR: `gh pr create --repo upstream/owner/repo --head fork-owner:branch --base target-branch`. Pushing directly to upstream requires write access (403 for forks). The PR auto-updates when you push to origin (the fork remote).
