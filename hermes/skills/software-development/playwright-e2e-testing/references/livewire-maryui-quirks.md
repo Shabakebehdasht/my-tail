@@ -20,6 +20,23 @@ const el = (wm) => page.locator(`input[wire\:model="${wm}"]`);  // note the esca
 
 Plain hand-written forms (e.g. a login page) keep stable `#id`/`#password` — use those.
 
+## Selects: MaryUI `x-select` binds `wire:model.live`, and `selectOption()` works
+
+MaryUI `<x-select>` renders a real native `<select>`, but the binding attribute
+carries the `.live` modifier — `wire:model.live="prop"`, NOT plain `wire:model`.
+A `select[wire\:model="..."]` locator matches nothing. Select by the full name
+(colon escaped, dots literal): `select[wire\:model.live="filter_s_id"]`.
+
+Playwright's `selectOption({ index: N })` drives it directly and fires the
+Livewire round-trip — no need to click through a custom dropdown. Then wait for
+the round-trip (~1–1.5s for debounce + network) and assert the *result* (changed
+pagination text, filtered rows), not the select's displayed value.
+
+Scope carefully: the page usually holds several selects (e.g. the MaryUI table
+per-page control is `wire:model.live="perPage"`), so prefer the
+`wire:model.live` locator over positional `.first()` — option order shifts when
+seed data changes.
+
 ## Buttons: watch for duplicate `type=submit`
 
 A MaryUI layout puts a logout `<form method=POST action=/logout>` with its own submit
@@ -82,3 +99,31 @@ active menu element.
 MaryUI `Toast` trait renders a `.toast` element (class `toast ... toast-top toast-end`).
 Assert the success text with `toContainText(...)` + `.first()` on `.toast` to avoid
 strict-mode if concurrent toasts accumulate.
+
+## Confirm dialogs are native
+
+`wire:confirm` fires a real browser dialog, not a MaryUI modal. Arm the handler
+BEFORE the triggering click — `page.on('dialog', (d) => d.accept())` to confirm,
+`d.dismiss()` to cancel — and register it inside each test (handlers persist on
+the page). Dismiss-then-assert proves the no-op path; accept-then-revert in the
+same test keeps the suite repeatable.
+
+## File uploads: match `accept` first
+
+Probe the file input's `accept` attribute before crafting the payload. When only
+images/pdf are accepted, a `.txt` is rejected client-side — build an in-memory
+buffer instead: `setInputFiles({ name: 'e2e.pdf', mimeType: 'application/pdf',
+buffer: Buffer.from(...) })`. Wait for the Livewire upload round-trip (~1s)
+before clicking submit.
+
+## Modal close: probe it, don't assume Escape
+
+Keyboard Escape does not reliably dismiss a MaryUI dialog. Probe the real close
+path — the لغو button, the X calling `resetForm`, or `close-on-backdrop` — and
+click that, then assert the modal title is gone.
+
+## Debounced search needs realistic typing
+
+`.live.debounce` inputs flake with instant `fill()` + short waits. Type with
+`pressSequentially(text, { delay })`, wait ~2–2.5s, then assert the narrowed rows
+— especially for numeric/timestamp queries where one keystroke changes the result set.

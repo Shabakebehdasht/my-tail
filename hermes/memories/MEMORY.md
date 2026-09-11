@@ -1,13 +1,5 @@
-When user says 'pr:', open a PR to https://github.com/asgarimehdi/h-dashboard/tree/beta (branch: bahar -> origin/beta).
-
-CodeGraph v1.6.0 installed at /tmp/codegraph-linux-x64. Run via:
-  node --liftoff-only --disable-warning=ExperimentalWarning /tmp/codegraph-linux-x64/lib/dist/bin/codegraph.js <cmd>
-  Alias: codegraph-cli = that node command.
-  Index initialized in h-dashboard: 478 files, 7607 nodes, 23279 edges.
+branch: bahar -> origin/beta).
 §
-CodeGraph v1.6.0 installed at /tmp/codegraph-linux-x64. Run via:
-  node --liftoff-only --disable-warning=ExperimentalWarning /tmp/codegraph-linux-x64/lib/dist/bin/codegraph.js <cmd>
-  Alias: codegraph-cli = that node command.
-  Index initialized in h-dashboard: 478 files, 7607 nodes, 23279 edges.
+CodeGraph: installed globally via `npm install -g @colbymchenry/codegraph` (binary `codegraph` on PATH). Index h-dashboard with `codegraph init .`, query via codegraph_explore MCP (projectPath=/home/runner/h-dashboard) or CLI `codegraph explore/query`. Auto-syncs on change.
 §
 When user says 'pr:', open a PR to https://github.com/asgarimehdi/h-dashboard/tree/beta (branch: bahar -> origin/beta).

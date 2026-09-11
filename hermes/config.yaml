@@ -89,6 +89,9 @@ delegation:
   max_iterations: 250
 skills:
   creation_nudge_interval: 15
+command_allowlist:
+  - script execution via heredoc
+  - script execution via -e/-c flag
 kanban:
   review_dispatch: true
 code_execution:
@@ -99,6 +102,7 @@ streaming:
 onboarding:
   seen:
     profile_build_offered: true
+    busy_input_prompt: true
 telemetry:
   shared_metrics:
     enabled: false

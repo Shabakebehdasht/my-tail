@@ -76,3 +76,33 @@ only know by looking at the running page.
   `page.request.get(href)` — the APIRequestContext shares the browser's auth
   session/cookies. Only `status >= 500` is a real break; 302 → /login and 404 mean
   "route exists but redirects/missing", not a crash, so tolerate them.
+- **Fill independent spec gaps in parallel.** Spec files/dirs are independent work —
+  dispatch one worker per file or directory with its probe facts in context, then
+  verify each green before the final full run. Sequential gap-filling is the slow path.
+- **Full-suite runs go to the background.** A whole-suite Playwright run takes minutes
+  and outlives foreground command timeouts — launch it as a background process that
+  notifies on completion and verify from its log. Keep per-file runs foreground.
+- **Blocked runner wrapper → call the local binary.** If `npx playwright` fails,
+  `./node_modules/.bin/playwright` is the same CLI without the resolution step —
+  identical args, pinned version.
+- **Narrow nullable extractions before asserting.** Specs are type-checked:
+  `innerText().match(/.../)?.[0]` is `string | undefined` and fails
+  `toContainText`/`toMatch` typing. Assert `not.toBeNull()` first, then bind
+  `const x: string = m![0]`.
+- **Probe scripts must live inside the project directory.** Node ESM resolves
+  `@playwright/test` by walking up from the script file, so a probe saved to
+  `/tmp` fails with `ERR_MODULE_NOT_FOUND` — copy it into the repo
+  (e.g. `probe-*.mjs`), run it with `node`, and delete it after.
+- **A 500 on a nested route with a working index page usually means a missing view,
+  not a broken feature.** Grep the views directory for the component name and probe
+  each URL's status separately before declaring the feature dead — the list page's
+  inline create/edit form may fully work while the standalone route 500s. When the
+  view never existed and nothing references the route (no links, templates, or
+  tests), delete the dead route and its orphaned view instead of scaffolding a
+  duplicate page — then verify the dead URL returns a clean 404 and the index
+  page still returns 200.
+- **Plan-claimed features are claims, not facts.** Before writing a test for a
+  query param, filter, or toggle from a plan doc, probe whether it exists and does
+  anything (param changes the page? filter present on this page vs only inside a
+  create modal?). Scenarios that are unimplementable without code changes or data
+  mutation get `test.fixme` with the defect named, never a faked pass.
