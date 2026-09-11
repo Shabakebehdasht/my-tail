@@ -2,295 +2,299 @@
   "version": 2,
   "manifest": {
     "media/DESCRIPTION.md": [
-      1789052435120322485,
+      1789135208410885965,
       139
     ],
     "media/gif-search/SKILL.md": [
-      1789052435120399661,
+      1789135208410950446,
       2720
     ],
     "media/songsee/SKILL.md": [
-      1789052435120475586,
+      1789135208411044521,
       2336
     ],
     "media/youtube-content/SKILL.md": [
-      1789052435120574345,
+      1789135208411117928,
       3538
     ],
     "note-taking/DESCRIPTION.md": [
-      1789052435120804192,
+      1789135208411312321,
       146
     ],
     "note-taking/obsidian/SKILL.md": [
-      1789052435120879655,
+      1789135208411375759,
       3092
     ],
     "productivity/DESCRIPTION.md": [
-      1789052435120963081,
+      1789135208411447593,
       114
     ],
     "productivity/airtable/SKILL.md": [
-      1789052435121040568,
+      1789135208411514598,
       11314
     ],
     "productivity/powerpoint/SKILL.md": [
-      1789052435125285594,
+      1789135208415191166,
       10781
     ],
     "productivity/document-to-action-items/SKILL.md": [
-      1789052435121885543,
+      1789135208412237817,
       3910
     ],
     "productivity/product-price-monitor/SKILL.md": [
-      1789052435125900972,
+      1789135208415627180,
       4400
     ],
     "productivity/google-workspace/SKILL.md": [
-      1789052435122829097,
+      1789135208413060752,
       13670
     ],
     "productivity/box/SKILL.md": [
-      1789052435121127519,
+      1789135208411590820,
       11697
     ],
     "productivity/xlsx/SKILL.md": [
-      1789052435126201286,
+      1789135208415886253,
       9655
     ],
     "productivity/docx/SKILL.md": [
-      1789052435122017102,
+      1789135208412357069,
       10395
     ],
     "productivity/weekly-review-planning/SKILL.md": [
-      1789052435126063688,
+      1789135208415768824,
       3975
     ],
+    "productivity/collective-wisdom-install/SKILL.md": [
+      1789135167289333464,
+      7210
+    ],
     "productivity/meeting-action-items/SKILL.md": [
-      1789052435123560401,
+      1789135208413675339,
       3808
     ],
     "productivity/maps/SKILL.md": [
-      1789052435123359828,
+      1789135208413512615,
       6705
     ],
     "productivity/teams-meeting-pipeline/SKILL.md": [
-      1789052435125983267,
+      1789135208415698292,
       7206
     ],
     "productivity/notion/SKILL.md": [
-      1789052435123654533,
+      1789135208413743977,
       14629
     ],
     "productivity/pdf/SKILL.md": [
-      1789052435123877719,
+      1789135208413940233,
       12489
     ],
     "research/DESCRIPTION.md": [
-      1789052435126948603,
+      1789135208416531867,
       179
     ],
     "research/arxiv/SKILL.md": [
-      1789052435127034934,
+      1789135208416600455,
       10061
     ],
     "research/competitor-news-monitor/SKILL.md": [
-      1789052435127200754,
+      1789135208416745105,
       4619
     ],
     "research/rss-feeds/SKILL.md": [
-      1789052435127791996,
+      1789135208417280914,
       4557
     ],
     "research/llm-wiki/SKILL.md": [
-      1789052435127686988,
+      1789135208417168164,
       20121
     ],
     "research/grounded-citations/SKILL.md": [
-      1789052435127284881,
+      1789135208416821016,
       12652
     ],
     "social-media/DESCRIPTION.md": [
-      1789052435127961402,
+      1789135208417437667,
       151
     ],
     "social-media/xurl/SKILL.md": [
-      1789052435128220232,
+      1789135208417680149,
       16345
     ],
     "social-media/reddit-reading/SKILL.md": [
-      1789052435128050206,
+      1789135208417522545,
       6279
     ],
     "autonomous-ai-agents/DESCRIPTION.md": [
-      1789052435106413146,
+      1789135208398631156,
       211
     ],
     "autonomous-ai-agents/opencode/SKILL.md": [
-      1789052435108601568,
+      1789135208400416195,
       7259
     ],
     "autonomous-ai-agents/hermes-agent/SKILL.md": [
-      1789052435106848162,
+      1789135167271180401,
       13183
     ],
     "autonomous-ai-agents/claude-code/SKILL.md": [
-      1789052435106534819,
+      1789135208398719350,
       34281
     ],
     "autonomous-ai-agents/computer-use/SKILL.md": [
-      1789052435106740179,
+      1789135208398892844,
       15819
     ],
     "autonomous-ai-agents/codex/SKILL.md": [
-      1789052435106651445,
+      1789135208398805721,
       5738
     ],
     "email/DESCRIPTION.md": [
-      1789052435119943222,
+      1789135208410562722,
       101
     ],
     "email/email-inbox-triage/SKILL.md": [
-      1789052435120019217,
+      1789135208410628405,
       4057
     ],
     "email/himalaya/SKILL.md": [
-      1789052435120097525,
+      1789135208410695390,
       7272
     ],
     "apple/DESCRIPTION.md": [
-      1789052435105973292,
+      1789135208398256306,
       137
     ],
     "apple/imessage/SKILL.md": [
-      1789052435106319895,
+      1789135208398560133,
       2442
     ],
     "apple/apple-notes/SKILL.md": [
-      1789052435106052101,
+      1789135208398334723,
       2394
     ],
     "apple/findmy/SKILL.md": [
-      1789052435106230039,
+      1789135208398493909,
       3709
     ],
     "apple/apple-reminders/SKILL.md": [
-      1789052435106142918,
+      1789135208398413640,
       3606
     ],
     "software-development/simplify-code/SKILL.md": [
-      1789052435130740946,
+      1789135208419972515,
       14696
     ],
     "software-development/python-debugpy/SKILL.md": [
-      1789052435130567975,
+      1789135208419820612,
       13347
     ],
     "software-development/github/SKILL.md": [
-      1789052435128746677,
+      1789135208418093080,
       2446
     ],
     "software-development/systematic-debugging/SKILL.md": [
-      1789052435130915129,
+      1789135208420148914,
       14059
     ],
     "software-development/node-inspect-debugger/SKILL.md": [
-      1789052435130452781,
+      1789135208419739581,
       10894
     ],
     "software-development/codebase-inspection/SKILL.md": [
-      1789052435128329137,
+      1789135208417780045,
       3612
     ],
     "software-development/test-driven-development/SKILL.md": [
-      1789052435131001179,
+      1789135208420226509,
       10300
     ],
     "software-development/hermes-agent-skill-authoring/SKILL.md": [
-      1789052435129945876,
-      14432
+      1789135167297967811,
+      14657
     ],
     "software-development/spike/SKILL.md": [
-      1789052435130836710,
+      1789135208420073283,
       8723
     ],
     "software-development/inspecting-hermes-desktop-dom/SKILL.md": [
-      1789052435130278668,
+      1789135208419421858,
       6204
     ],
     "software-development/requesting-code-review/SKILL.md": [
-      1789052435130662908,
+      1789135208419898497,
       8423
     ],
     "software-development/dogfood/SKILL.md": [
-      1789052435128412182,
+      1789135208417849044,
       6324
     ],
     "software-development/laravel/SKILL.md": [
-      1789056550511968538,
-      5575
+      1789144322792757441,
+      6865
     ],
     "software-development/improve/SKILL.md": [
-      1789052435130062282,
+      1789135208419215483,
       3241
     ],
     "software-development/livewire-debugging/SKILL.md": [
-      1789052435130381133,
+      1789135208419671143,
       5909
     ],
     "web/DESCRIPTION.md": [
-      1789052435131084685,
+      1789135208420301028,
       137
     ],
     "web/blocked-page-recovery/SKILL.md": [
-      1789052435131170494,
+      1789135208420371720,
       5156
     ],
     "creative/DESCRIPTION.md": [
-      1789052435108699115,
+      1789135208400491185,
       116
     ],
     "creative/baoyu-infographic/SKILL.md": [
-      1789052435109984034,
+      1789135208401589835,
       10434
     ],
     "creative/design-md/SKILL.md": [
-      1789052435112963510,
+      1789135208404409234,
       8477
     ],
     "creative/architecture-diagram/SKILL.md": [
-      1789052435108790613,
+      1789135208400558340,
       5830
     ],
     "creative/humanizer/SKILL.md": [
-      1789052435113188790,
+      1789135208404597675,
       34463
     ],
     "creative/songwriting-and-ai-music/SKILL.md": [
-      1789052435119761258,
+      1789135208410401602,
       10963
     ],
     "creative/manim-video/SKILL.md": [
-      1789052435113347770,
+      1789135208404727197,
       12150
     ],
     "creative/popular-web-designs/SKILL.md": [
-      1789052435115738938,
+      1789135208406790316,
       9722
     ],
     "creative/p5js/SKILL.md": [
-      1789052435114558236,
+      1789135208405756317,
       27534
     ],
     "creative/claude-design/SKILL.md": [
-      1789052435112874826,
+      1789135208404324386,
       25117
     ],
     "creative/ascii-video/SKILL.md": [
-      1789052435109063515,
+      1789135208400774303,
       15011
     ],
     "devops/sdlc-review/SKILL.md": [
-      1789052435119854619,
+      1789135208410489516,
       9073
     ]
   },
@@ -780,6 +784,24 @@
       "category": "productivity",
       "frontmatter_name": "box",
       "description": "Box manages cloud files, sharing, search, and metadata.",
+      "platforms": [
+        "linux",
+        "macos",
+        "windows"
+      ],
+      "conditions": {
+        "fallback_for_toolsets": [],
+        "requires_toolsets": [],
+        "fallback_for_tools": [],
+        "requires_tools": [],
+        "session_platforms": []
+      }
+    },
+    {
+      "skill_name": "collective-wisdom-install",
+      "category": "productivity",
+      "frontmatter_name": "collective-wisdom-install",
+      "description": "Browse, install, or share team skills with consent.",
       "platforms": [
         "linux",
         "macos",

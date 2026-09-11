@@ -56,12 +56,11 @@ This means the baseline has patterns for code you just fixed. Regenerate.
 
 Pest v4 has built-in browser testing powered by Playwright. Use it for critical user flows where `Livewire::test()` is insufficient.
 
-**Setup procedure:**
-```bash
-composer require pestphp/pest-plugin-browser --dev
-npm install playwright@latest --save-dev
-npx playwright install chromium
-```
+**Hard rules before writing browser tests:**
+
+1. **Logging in must boot the browser runtime first.** pest-plugin-browser starts the Playwright websocket and the Laravel HTTP server inside `__markAsBrowserTest`, a method proxy that runs at the START of the test body — AFTER `beforeEach`. So any `visit()`/`fill()` you call inside `beforeEach` runs before the runtime exists and dies with `Call to a member function sendText() on null` (no websocket) or `ServerNotFoundException` (no HTTP server). Fix: call an idempotent `bootBrowser()` helper at the top of every login helper (see `references/pest-browser-testing.md`).
+2. **`login*` helpers return `AwaitableWebpage`, not `Webpage`.** The `visit()->fill()->click()->waitForText()` chain resolves to `Pest\Browser\Api\AwaitableWebpage`; declaring `Webpage` throws a TypeError.
+3. **Select on the rendered DOM, never on `wire:model` attributes.** `[wire:model.live.debounce="x"]` is an invalid CSS selector (`querySelectorAll` throws). MaryUI `<x-input>` renders a bare `<input placeholder="...">` and login inputs are `#n_code` / `#password` (by id). Target `[placeholder="..."]` or `#id`.
 
 **Test location:** `tests/Browser/` directory. Add a `Browser` testsuite to `phpunit.xml`:
 ```xml
@@ -70,39 +69,7 @@ npx playwright install chromium
 </testsuite>
 ```
 
-**Run:**
-```bash
-php artisan test --testsuite=Browser
-# Or: composer test:browser (if script added to composer.json)
-```
-
-**Livewire browser testing:**
-```php
-// Use Livewire::visit() instead of Livewire::test()
-livewire('users.index')
-    ->visit('/users')
-    ->type('[wire:model="search"]', 'query')
-    ->assertSee('Result');
-```
-
-**Gitignore additions:**
-```
-/test-results/
-/playwright-report/
-/blob-report/
-/playwright/.cache/
-```
-
-**CI (GitHub Actions):**
-```yaml
-- name: Install Playwright browsers
-  run: npx playwright install chromium --with-deps
-
-- name: Run browser tests
-  run: ./vendor/bin/pest --testsuite=Browser
-```
-
-See `references/pest-browser-testing.md` for full setup details.
+See `references/pest-browser-testing.md` for full setup, auth helper, and CI integration patterns.
 
 ### Pest Test Execution Order
 
@@ -135,6 +102,14 @@ git commit --allow-empty -m "ci: re-run tests" && git push origin HEAD:branch-na
 ```
 
 This pushes an empty commit that triggers a fresh CI run. Use sparingly — if the test fails again, investigate rather than re-triggering.
+
+## Browser Tests in CI — keep them isolated from the unit/coverage jobs
+
+When pest-plugin-browser is a composer dependency, a bare `pest --parallel` (or `--mutate --parallel`) walks the whole `tests/` tree INCLUDING `tests/Browser`, and throws `PlaywrightNotInstalledException` in jobs that never install the npm playwright package. Fix:
+
+- The browser npm package is NOT a `package.json` dependency — install it ad-hoc in the browser job only (`npm install --no-save playwright@X`). Keeping it out of `package.json` avoids `package-lock.json` conflicting with an upstream branch that never had playwright.
+- Add `--exclude-testsuite=Browser` to the unit/coverage and mutation run commands.
+- Mark the browser job `continue-on-error: true` until its selectors are actually synced to the rendered DOM — a freshly generated suite failing in CI should be informational, exactly like the mutation job.
 
 ## Livewire Conventions (Quick Reference)
 
