@@ -1,4 +1,4 @@
-name: bahar
+name: rebecca
 
 on:
   workflow_dispatch:
@@ -9,7 +9,7 @@ jobs:
     timeout-minutes: 360
     env:
       REPO_ORIGIN: https://github.com/Shabakebehdasht/h-dashboard.git
-      WF_NAME: bahar
+      WF_NAME: rebecca
 
     steps:
       - name: 1. Checkout Repository
@@ -299,7 +299,7 @@ jobs:
                 && echo '✅ Seed result sent to Telegram' \
                 || echo '⚠️ Seed result failed to send'
             else
-              hermes send --to telegram "bahar online and ready." \
+              hermes send --to telegram "rebecca online and ready." \
                 && echo '✅ Welcome message sent to Telegram' \
                 || echo '⚠️ Welcome message failed to send'
             fi
@@ -357,7 +357,7 @@ jobs:
             echo 'ℹ️ No changes to commit'
           else
             git add hermes/ 9router/ 2>/dev/null || true
-            git commit -m "Sync hermes state & 9router data from bahar instance"
+            git commit -m "Sync hermes state & 9router data from rebecca instance"
             # Pull first in case another run pushed before us
             git pull --rebase origin "${{ github.ref_name }}" || true
             git push origin "${{ github.ref_name }}" || echo '⚠️ Push failed — changes saved locally'
