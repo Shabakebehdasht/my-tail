@@ -1,6 +1,8 @@
 name: rebecca
 
 on:
+  schedule:
+    - cron: '0 */6 * * *'  # روشن شدن خودکار هر ۶ ساعت یک‌بار (۲۴/۷)
   workflow_dispatch:
 
 jobs:
