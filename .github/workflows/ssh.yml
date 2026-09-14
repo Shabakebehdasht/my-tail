@@ -315,11 +315,11 @@ jobs:
           nohup php artisan serve --host=0.0.0.0 > /dev/null 2>&1 &
           echo '✅ Laravel server started on port 8000'
 
-      - name: 15. Server Keep-Alive (5h 55m)
+      - name: 15. Server Keep-Alive (5h 45m)
         run: |
-          for i in {1..355}; do
+          for i in {1..345}; do
             sleep 60
-            echo "[$i/355] Server is active (SSH + Laravel on port 8000)..."
+            echo "[$i/345] Server is active (SSH + Laravel on port 8000)..."
           done
 
       - name: 16. Sync hermes state & 9router data back to my-tail
